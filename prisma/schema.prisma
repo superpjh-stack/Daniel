@@ -1,0 +1,153 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// 사용자 (관리자, 교사, 학부모)
+model User {
+  id        String   @id @default(cuid())
+  loginId   String   @unique
+  password  String
+  name      String
+  role      String   @default("teacher") // admin, teacher, parent
+  phone     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 담당 반
+  classes Class[]
+
+  // 작성 공지
+  announcements Announcement[]
+
+  // 학부모-자녀 연결
+  parentStudents ParentStudent[]
+}
+
+// 반
+model Class {
+  id        String   @id @default(cuid())
+  name      String   // 예: "1학년 1반", "다윗반"
+  grade     Int      // 학년 1-6
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 담당 교사
+  teacher   User?    @relation(fields: [teacherId], references: [id])
+  teacherId String?
+
+  // 해당 반 학생들
+  students Student[]
+}
+
+// 학생
+model Student {
+  id           String   @id @default(cuid())
+  name         String
+  grade        Int      // 학년
+  birthday     DateTime?
+  parentPhone  String?
+  parentName   String?
+  note         String?  // 특이사항 (알레르기 등)
+  profileImage String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // 소속 반
+  class   Class?  @relation(fields: [classId], references: [id])
+  classId String?
+
+  // 출석 기록
+  attendances Attendance[]
+
+  // 달란트 기록
+  talents Talent[]
+
+  // 현재 달란트 잔액
+  talentBalance Int @default(0)
+
+  // 학부모-자녀 연결
+  parentStudents ParentStudent[]
+}
+
+// 출석 기록
+model Attendance {
+  id        String   @id @default(cuid())
+  date      DateTime
+  status    String   // present, absent, late
+  memo      String?  // 사유 메모
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  studentId String
+
+  @@unique([studentId, date])
+}
+
+// 달란트 기록
+model Talent {
+  id        String   @id @default(cuid())
+  amount    Int      // 양수: 지급, 음수: 차감
+  reason    String   // 지급/차감 사유
+  type      String   // attendance (출석), bonus (추가지급), purchase (구매)
+  createdAt DateTime @default(now())
+
+  student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  studentId String
+}
+
+// 달란트 시장 상품
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  price       Int      // 달란트 가격
+  stock       Int      @default(0)
+  image       String?
+  category    String?  // school, snack, culture, special, etc
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// 공지사항
+model Announcement {
+  id        String   @id @default(cuid())
+  title     String
+  content   String
+  category  String   @default("general")  // general, event, urgent
+  isPinned  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  author    User     @relation(fields: [authorId], references: [id])
+  authorId  String
+}
+
+// 학부모-자녀 연결 (다대다)
+model ParentStudent {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  parent    User     @relation(fields: [parentId], references: [id], onDelete: Cascade)
+  parentId  String
+
+  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  studentId String
+
+  @@unique([parentId, studentId])
+}
+
+// 설정
+model Setting {
+  id    String @id @default(cuid())
+  key   String @unique
+  value String
+}

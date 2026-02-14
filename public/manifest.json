@@ -1,0 +1,24 @@
+{
+  "name": "다니엘 - 동은교회 초등부 출석부",
+  "short_name": "다니엘",
+  "description": "동은교회 초등부 아이들의 출석과 달란트를 스마트하게 관리하세요!",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#667eea",
+  "theme_color": "#a855f7",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

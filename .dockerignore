@@ -1,0 +1,22 @@
+# Dependencies
+node_modules
+npm-debug.log
+
+# Next.js
+.next
+
+# Git
+.git
+.gitignore
+
+# IDE
+.vscode
+.idea
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Misc
+*.md
+!README.md
