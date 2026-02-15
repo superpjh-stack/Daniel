@@ -1,9 +1,12 @@
-# Dependencies
+# Dependencies (allow specific modules for standalone build)
 node_modules
+!node_modules/.prisma
+!node_modules/@prisma
+!node_modules/pg
 npm-debug.log
 
-# Next.js
-.next
+# Next.js (keep .next for standalone build)
+# .next
 
 # Git
 .git

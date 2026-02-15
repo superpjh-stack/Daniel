@@ -1,0 +1,51 @@
+{
+  "family": "daniel-church-app",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "512",
+  "memory": "1024",
+  "executionRoleArn": "arn:aws:iam::457663127117:role/ecsTaskExecutionRole",
+  "containerDefinitions": [
+    {
+      "name": "daniel-church-app",
+      "image": "457663127117.dkr.ecr.ap-northeast-2.amazonaws.com/daniel-church-app:latest",
+      "portMappings": [
+        {
+          "containerPort": 8080,
+          "protocol": "tcp"
+        }
+      ],
+      "environment": [
+        {
+          "name": "DATABASE_URL",
+          "value": "postgresql://danieladmin:DanielChurch2026%21@daniel-db.ctuei2aakbv8.ap-northeast-2.rds.amazonaws.com:5432/daniel"
+        },
+        {
+          "name": "JWT_SECRET",
+          "value": "daniel-church-app-super-secret-key-2024"
+        },
+        {
+          "name": "NODE_ENV",
+          "value": "production"
+        },
+        {
+          "name": "PORT",
+          "value": "8080"
+        },
+        {
+          "name": "HOSTNAME",
+          "value": "0.0.0.0"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/daniel-church-app",
+          "awslogs-region": "ap-northeast-2",
+          "awslogs-stream-prefix": "ecs"
+        }
+      },
+      "essential": true
+    }
+  ]
+}

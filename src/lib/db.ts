@@ -1,8 +1,14 @@
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
+import pg from 'pg';
 
 function createPrismaClient() {
-  const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
+  const isRds = process.env.DATABASE_URL?.includes('.rds.amazonaws.com');
+  const pool = new pg.Pool({
+    connectionString: process.env.DATABASE_URL!,
+    ...(isRds ? { ssl: { rejectUnauthorized: false } } : {}),
+  });
+  const adapter = new PrismaPg(pool);
   return new PrismaClient({ adapter });
 }
 
