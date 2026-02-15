@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-02-15T14:30:36.640Z",
+  "lastUpdated": "2026-02-15T15:41:49.067Z",
   "activeFeatures": [
     "bible-quiz-game",
     "attendance-improvement",
@@ -118,22 +118,12 @@
       "autoAdvanced": true
     },
     "ccm-video": {
-      "phase": "completed",
-      "phaseNumber": 7,
+      "phase": "archived",
       "matchRate": 98,
       "iterationCount": 0,
       "startedAt": "2026-02-15T15:00:00.000Z",
-      "documents": {
-        "plan": "docs/01-plan/features/ccm-video.plan.md",
-        "design": "docs/02-design/features/ccm-video.design.md",
-        "analysis": "docs/03-analysis/ccm-video.analysis.md",
-        "report": "docs/04-report/features/ccm-video.report.md"
-      },
-      "timestamps": {
-        "lastUpdated": "2026-02-15T17:00:00.000Z"
-      },
-      "previousPhase": "report",
-      "autoAdvanced": true
+      "archivedAt": "2026-02-15T23:45:00.000Z",
+      "archivedTo": "docs/archive/2026-02/ccm-video/"
     },
     "daniel": {
       "phase": "do",
@@ -144,9 +134,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-02-13T18:23:07.481Z",
-        "lastUpdated": "2026-02-15T14:30:36.640Z"
+        "lastUpdated": "2026-02-15T15:15:19.159Z"
       },
-      "lastFile": "/c/AI Make/03 Churchapp/daniel/src/lib/db.ts"
+      "lastFile": "/c/AI Make/03 Churchapp/daniel/src/app/layout.tsx"
     },
     "(dashboard)": {
       "phase": "do",
@@ -183,9 +173,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-02-14T04:04:18.096Z",
-        "lastUpdated": "2026-02-15T13:37:58.720Z"
+        "lastUpdated": "2026-02-15T15:41:49.066Z"
       },
-      "lastFile": "C:\\AI Make\\03 Churchapp\\daniel\\prisma\\seed.ts"
+      "lastFile": "C:\\AI Make\\03 Churchapp\\daniel\\prisma\\cleanup-quiz-duplicates.ts"
     },
     "attendance": {
       "phase": "do",
@@ -248,7 +238,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-02-14T04:54:27.049Z",
-        "lastUpdated": "2026-02-15T14:30:08.775Z"
+        "lastUpdated": "2026-02-15T14:59:11.946Z"
       },
       "lastFile": "/c/AI Make/03 Churchapp/daniel/src/app/api/auth/login/route.ts"
     },
@@ -521,7 +511,7 @@
   "session": {
     "startedAt": "2026-02-13T11:14:24.300Z",
     "onboardingCompleted": false,
-    "lastActivity": "2026-02-15T14:30:36.640Z"
+    "lastActivity": "2026-02-15T15:41:49.067Z"
   },
   "history": [
     {
@@ -1479,6 +1469,54 @@
     {
       "timestamp": "2026-02-15T14:30:36.640Z",
       "feature": "daniel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-15T14:59:07.005Z",
+      "feature": "login",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-15T14:59:11.946Z",
+      "feature": "login",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-15T14:59:22.876Z",
+      "feature": "daniel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-15T15:15:08.875Z",
+      "feature": "daniel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-15T15:15:19.159Z",
+      "feature": "daniel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-15T15:36:54.128Z",
+      "feature": "prisma",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-15T15:40:19.380Z",
+      "feature": "prisma",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-15T15:41:49.066Z",
+      "feature": "prisma",
       "phase": "do",
       "action": "updated"
     }
