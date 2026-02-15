@@ -40,19 +40,11 @@ export async function verifyToken(token: string): Promise<UserPayload | null> {
   }
 }
 
-// 인증 없이 기본 관리자로 동작 (로그인 불필요)
-const DEFAULT_USER: UserPayload = {
-  id: '1',
-  loginId: 'admin@church.com',
-  name: '초등부샘',
-  role: 'admin',
-};
-
-export async function getSession(): Promise<UserPayload> {
+export async function getSession(): Promise<UserPayload | null> {
   const cookieStore = await cookies();
   const token = cookieStore.get('token')?.value;
-  if (!token) return DEFAULT_USER;
-  return (await verifyToken(token)) ?? DEFAULT_USER;
+  if (!token) return null;
+  return await verifyToken(token);
 }
 
 export async function setSession(payload: UserPayload): Promise<void> {

@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { title, youtubeUrl, category, description } = await request.json();
+    const { title, youtubeUrl, category, description, isPinned } = await request.json();
 
     if (!title || !youtubeUrl || !category) {
       return NextResponse.json({ error: '제목, YouTube URL, 카테고리는 필수입니다.' }, { status: 400 });
@@ -59,6 +59,7 @@ export async function POST(request: NextRequest) {
       thumbnailUrl,
       category,
       description,
+      isPinned: isPinned || false,
     });
 
     return NextResponse.json({ id, title });

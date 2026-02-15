@@ -1616,6 +1616,7 @@ export async function createCcmVideo(data: {
   thumbnailUrl: string;
   category: string;
   description?: string;
+  isPinned?: boolean;
 }): Promise<string> {
   const v = await prisma.ccmVideo.create({
     data: {
@@ -1625,6 +1626,7 @@ export async function createCcmVideo(data: {
       thumbnailUrl: data.thumbnailUrl,
       category: data.category,
       description: data.description || null,
+      isPinned: data.isPinned || false,
     },
   });
   return v.id;

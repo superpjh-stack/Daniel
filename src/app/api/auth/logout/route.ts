@@ -1,8 +1,11 @@
 import { NextResponse } from 'next/server';
-import { clearSession } from '@/lib/auth';
 
 export async function POST() {
-  await clearSession();
-  
-  return NextResponse.redirect(new URL('/', process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'));
+  const response = NextResponse.json({ success: true });
+
+  response.cookies.delete('token');
+  response.cookies.delete('user_role');
+  response.cookies.delete('user_name');
+
+  return response;
 }

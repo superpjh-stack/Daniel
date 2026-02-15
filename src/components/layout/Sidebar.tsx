@@ -17,7 +17,9 @@ import {
   Search,
   Gamepad2,
   Music,
+  LogOut,
 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 
 interface NavItem {
@@ -43,7 +45,7 @@ const navItems: NavItem[] = [
   { href: '/ccm', icon: <Music size={20} />, label: '추천 CCM' },
   { href: '/shop', icon: <ShoppingBag size={20} />, label: '달란트 시장', adminOnly: true },
   { href: '/stats', icon: <BarChart3 size={20} />, label: '통계', adminOnly: true },
-  { href: '/settings', icon: <Settings size={20} />, label: '설정', hideForParent: true },
+  { href: '/settings', icon: <Settings size={20} />, label: '설정', adminOnly: true },
   { href: '/dashboard', icon: <Home size={20} />, label: '대시보드', hideForParent: true },
   { href: '/parent', icon: <Home size={20} />, label: '대시보드', parentOnly: true },
   { href: '/parent/attendance', icon: <Calendar size={20} />, label: '출석 내역', parentOnly: true },
@@ -52,11 +54,24 @@ const navItems: NavItem[] = [
 
 export default function Sidebar({ userName, userRole }: SidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [loggingOut, setLoggingOut] = useState(false);
   const isAdmin = userRole === 'admin';
   const isParent = userRole === 'parent';
+
+  const handleLogout = async () => {
+    setLoggingOut(true);
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      router.push('/login');
+      router.refresh();
+    } catch {
+      setLoggingOut(false);
+    }
+  };
 
   useEffect(() => {
     const mq = window.matchMedia('(min-width: 1024px)');
@@ -176,7 +191,15 @@ export default function Sidebar({ userName, userRole }: SidebarProps) {
         </nav>
 
         {/* 하단 */}
-        <div className="p-4 border-t border-slate-100">
+        <div className="p-4 border-t border-slate-100 space-y-2">
+          <button
+            onClick={handleLogout}
+            disabled={loggingOut}
+            className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-500 hover:bg-red-50 hover:text-red-600 transition-colors disabled:opacity-50"
+          >
+            <LogOut size={18} />
+            <span>{loggingOut ? '로그아웃 중...' : '로그아웃'}</span>
+          </button>
           <p className="text-xs text-slate-400 text-center">v1.0 동은교회</p>
         </div>
       </motion.aside>

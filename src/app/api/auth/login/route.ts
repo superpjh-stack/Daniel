@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { getUserByLoginId } from '@/lib/db';
-import { setSession } from '@/lib/auth';
+import { signToken } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
   try {
@@ -34,15 +34,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 세션 설정
-    await setSession({
+    // JWT 토큰 생성
+    const token = await signToken({
       id: user.id,
       loginId: user.loginId,
       name: user.name,
       role: user.role,
     });
 
-    return NextResponse.json({
+    // 응답에 모든 쿠키를 직접 설정
+    const response = NextResponse.json({
       success: true,
       user: {
         id: user.id,
@@ -51,6 +52,27 @@ export async function POST(request: NextRequest) {
         role: user.role,
       },
     });
+
+    response.cookies.set('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 7,
+    });
+    response.cookies.set('user_role', user.role, {
+      httpOnly: false,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 7,
+    });
+    response.cookies.set('user_name', user.name, {
+      httpOnly: false,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 7,
+    });
+
+    return response;
   } catch (error) {
     console.error('Login error:', error);
     return NextResponse.json(
