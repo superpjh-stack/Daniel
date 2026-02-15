@@ -9,6 +9,18 @@ export const metadata: Metadata = {
     icon: "/favicon.ico",
     apple: "/icon-192.png",
   },
+  openGraph: {
+    title: "다니엘 - 동은교회 초등부 출석부",
+    description: "동은교회 초등부 아이들의 출석과 달란트를 스마트하게 관리하세요!",
+    siteName: "다니엘",
+    locale: "ko_KR",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "다니엘 - 동은교회 초등부 출석부",
+    description: "동은교회 초등부 아이들의 출석과 달란트를 스마트하게 관리하세요!",
+  },
 };
 
 export const viewport: Viewport = {
