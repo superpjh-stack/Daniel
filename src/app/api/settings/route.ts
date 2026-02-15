@@ -24,8 +24,8 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    if (session.role !== 'admin') {
-      return NextResponse.json({ error: '관리자만 설정을 변경할 수 있습니다.' }, { status: 403 });
+    if (session.role !== 'admin' && session.role !== 'teacher') {
+      return NextResponse.json({ error: '관리자 또는 교사만 설정을 변경할 수 있습니다.' }, { status: 403 });
     }
 
     const body = await request.json();

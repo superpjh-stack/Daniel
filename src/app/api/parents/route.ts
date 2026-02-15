@@ -8,7 +8,7 @@ export async function GET() {
   if (!session) {
     return NextResponse.json({ error: '인증이 필요합니다.' }, { status: 401 });
   }
-  if (session.role !== 'admin') {
+  if (session.role !== 'admin' && session.role !== 'teacher') {
     return NextResponse.json({ error: '권한이 없습니다.' }, { status: 403 });
   }
 
@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
   if (!session) {
     return NextResponse.json({ error: '인증이 필요합니다.' }, { status: 401 });
   }
-  if (session.role !== 'admin') {
+  if (session.role !== 'admin' && session.role !== 'teacher') {
     return NextResponse.json({ error: '권한이 없습니다.' }, { status: 403 });
   }
 

@@ -473,6 +473,10 @@ export async function createClass(cls: { id: string; name: string; grade: number
   });
 }
 
+export async function updateClass(id: string, data: { name?: string; grade?: number; teacherId?: string | null }): Promise<void> {
+  await prisma.class.update({ where: { id }, data });
+}
+
 export async function deleteClass(id: string): Promise<void> {
   await prisma.$transaction([
     prisma.student.updateMany({ where: { classId: id }, data: { classId: null } }),
@@ -1238,4 +1242,416 @@ export async function getAttendanceRanking(limit: number = 10): Promise<{ id: st
     })
     .sort((a, b) => b.totalPresent - a.totalPresent)
     .slice(0, limit);
+}
+
+// ─── Quiz 함수 ───
+
+export interface QuizQuestion {
+  id: string;
+  question: string;
+  option1: string;
+  option2: string;
+  option3: string;
+  option4: string;
+  answer: number;
+  category: string;
+  difficulty: string;
+  reference: string | null;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface QuizResult {
+  id: string;
+  studentId: string;
+  score: number;
+  totalCount: number;
+  earnedTalent: number;
+  answers: string;
+  createdAt: string;
+  studentName?: string;
+}
+
+export async function getAllQuizQuestions(
+  category?: string,
+  difficulty?: string,
+  page: number = 1,
+  limit: number = 20
+): Promise<{ questions: QuizQuestion[]; total: number }> {
+  const where: Record<string, unknown> = { isActive: true };
+  if (category && category !== 'all') where.category = category;
+  if (difficulty && difficulty !== 'all') where.difficulty = difficulty;
+
+  const [total, questions] = await Promise.all([
+    prisma.quizQuestion.count({ where }),
+    prisma.quizQuestion.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      skip: (page - 1) * limit,
+      take: limit,
+    }),
+  ]);
+
+  return {
+    questions: questions.map(q => ({
+      ...q,
+      reference: q.reference ?? null,
+      createdAt: q.createdAt.toISOString(),
+      updatedAt: q.updatedAt.toISOString(),
+    })),
+    total,
+  };
+}
+
+export async function getQuizQuestionById(id: string): Promise<QuizQuestion | undefined> {
+  const q = await prisma.quizQuestion.findUnique({ where: { id } });
+  if (!q) return undefined;
+  return {
+    ...q,
+    reference: q.reference ?? null,
+    createdAt: q.createdAt.toISOString(),
+    updatedAt: q.updatedAt.toISOString(),
+  };
+}
+
+export async function createQuizQuestion(data: {
+  question: string; option1: string; option2: string; option3: string; option4: string;
+  answer: number; category: string; difficulty?: string; reference?: string;
+}): Promise<string> {
+  const q = await prisma.quizQuestion.create({
+    data: {
+      question: data.question,
+      option1: data.option1,
+      option2: data.option2,
+      option3: data.option3,
+      option4: data.option4,
+      answer: data.answer,
+      category: data.category,
+      difficulty: data.difficulty || 'easy',
+      reference: data.reference || null,
+    },
+  });
+  return q.id;
+}
+
+export async function updateQuizQuestion(id: string, data: {
+  question?: string; option1?: string; option2?: string; option3?: string; option4?: string;
+  answer?: number; category?: string; difficulty?: string; reference?: string;
+}): Promise<void> {
+  const updateData: Record<string, unknown> = {};
+  if (data.question !== undefined) updateData.question = data.question;
+  if (data.option1 !== undefined) updateData.option1 = data.option1;
+  if (data.option2 !== undefined) updateData.option2 = data.option2;
+  if (data.option3 !== undefined) updateData.option3 = data.option3;
+  if (data.option4 !== undefined) updateData.option4 = data.option4;
+  if (data.answer !== undefined) updateData.answer = data.answer;
+  if (data.category !== undefined) updateData.category = data.category;
+  if (data.difficulty !== undefined) updateData.difficulty = data.difficulty;
+  if (data.reference !== undefined) updateData.reference = data.reference || null;
+  await prisma.quizQuestion.update({ where: { id }, data: updateData });
+}
+
+export async function deactivateQuizQuestion(id: string): Promise<void> {
+  await prisma.quizQuestion.update({ where: { id }, data: { isActive: false } });
+}
+
+export async function getRandomQuizQuestions(
+  category?: string,
+  difficulty?: string,
+  count: number = 10
+): Promise<Omit<QuizQuestion, 'answer' | 'isActive' | 'createdAt' | 'updatedAt'>[]> {
+  const where: Record<string, unknown> = { isActive: true };
+  if (category && category !== 'all') where.category = category;
+  if (difficulty && difficulty !== 'all') where.difficulty = difficulty;
+
+  // 전체 조회 후 셔플 (PostgreSQL RANDOM() 대신 JS 셔플)
+  const all = await prisma.quizQuestion.findMany({
+    where,
+    select: { id: true, question: true, option1: true, option2: true, option3: true, option4: true, category: true, difficulty: true, reference: true },
+  });
+
+  // Fisher-Yates shuffle
+  for (let i = all.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [all[i], all[j]] = [all[j], all[i]];
+  }
+
+  return all.slice(0, count).map(q => ({
+    ...q,
+    reference: q.reference ?? null,
+  }));
+}
+
+export async function getStudentTodayQuizCount(studentId: string): Promise<number> {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+
+  return prisma.quizResult.count({
+    where: {
+      studentId,
+      createdAt: { gte: today, lt: tomorrow },
+    },
+  });
+}
+
+export async function submitQuizAndAwardTalent(
+  studentId: string,
+  answers: { questionId: string; selected: number }[]
+): Promise<{
+  score: number;
+  totalCount: number;
+  earnedTalent: number;
+  talentAwarded: boolean;
+  newBalance: number;
+  details: { questionId: string; question: string; selected: number; correct: number; isCorrect: boolean; reference: string | null; correctOption?: string }[];
+}> {
+  return prisma.$transaction(async (tx) => {
+    const questionIds = answers.map(a => a.questionId);
+    const questions = await tx.quizQuestion.findMany({
+      where: { id: { in: questionIds } },
+    });
+    const questionMap = new Map(questions.map(q => [q.id, q]));
+
+    let score = 0;
+    const details = answers.map(a => {
+      const q = questionMap.get(a.questionId);
+      if (!q) return { questionId: a.questionId, question: '?', selected: a.selected, correct: 0, isCorrect: false, reference: null };
+      const isCorrect = a.selected === q.answer;
+      if (isCorrect) score++;
+      const optionKey = `option${q.answer}` as 'option1' | 'option2' | 'option3' | 'option4';
+      return {
+        questionId: a.questionId,
+        question: q.question,
+        selected: a.selected,
+        correct: q.answer,
+        isCorrect,
+        reference: q.reference,
+        ...(!isCorrect && { correctOption: q[optionKey] }),
+      };
+    });
+
+    const totalCount = answers.length;
+    let earnedTalent = 0;
+    if (score === 10) earnedTalent = 10;
+    else if (score >= 7) earnedTalent = 7;
+    else if (score >= 4) earnedTalent = 4;
+    else if (score >= 1) earnedTalent = 1;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const todayCount = await tx.quizResult.count({
+      where: { studentId, createdAt: { gte: today, lt: tomorrow } },
+    });
+    const talentAwarded = todayCount < 3 && earnedTalent > 0;
+    const actualTalent = talentAwarded ? earnedTalent : 0;
+
+    await tx.quizResult.create({
+      data: {
+        studentId,
+        score,
+        totalCount,
+        earnedTalent: actualTalent,
+        answers: JSON.stringify(details),
+      },
+    });
+
+    let newBalance = 0;
+    if (talentAwarded) {
+      await tx.talent.create({
+        data: {
+          studentId,
+          amount: actualTalent,
+          reason: `성경퀴즈 ${score}/${totalCount} (${actualTalent}달란트)`,
+          type: 'quiz',
+        },
+      });
+      const student = await tx.student.update({
+        where: { id: studentId },
+        data: { talentBalance: { increment: actualTalent } },
+      });
+      newBalance = student.talentBalance;
+    } else {
+      const student = await tx.student.findUnique({ where: { id: studentId } });
+      newBalance = student?.talentBalance ?? 0;
+    }
+
+    return { score, totalCount, earnedTalent: actualTalent, talentAwarded, newBalance, details };
+  });
+}
+
+export async function getQuizResults(
+  studentId?: string,
+  classId?: string,
+  limit: number = 10
+): Promise<QuizResult[]> {
+  const where: Record<string, unknown> = {};
+  if (studentId) where.studentId = studentId;
+  if (classId && classId !== 'all') where.student = { classId };
+
+  const results = await prisma.quizResult.findMany({
+    where,
+    include: { student: { select: { name: true } } },
+    orderBy: { createdAt: 'desc' },
+    take: limit,
+  });
+
+  return results.map(r => ({
+    id: r.id,
+    studentId: r.studentId,
+    score: r.score,
+    totalCount: r.totalCount,
+    earnedTalent: r.earnedTalent,
+    answers: r.answers,
+    createdAt: r.createdAt.toISOString(),
+    studentName: r.student.name,
+  }));
+}
+
+export async function getQuizRanking(
+  classId?: string,
+  limit: number = 10
+): Promise<{ studentId: string; studentName: string; totalGames: number; avgScore: number; bestScore: number; totalTalentEarned: number }[]> {
+  const where: Record<string, unknown> = {};
+  if (classId && classId !== 'all') where.student = { classId };
+
+  const results = await prisma.quizResult.groupBy({
+    by: ['studentId'],
+    _count: { id: true },
+    _avg: { score: true },
+    _max: { score: true },
+    _sum: { earnedTalent: true },
+  });
+
+  const studentIds = results.map(r => r.studentId);
+  const students = await prisma.student.findMany({
+    where: {
+      id: { in: studentIds },
+      ...(classId && classId !== 'all' ? { classId } : {}),
+    },
+    select: { id: true, name: true },
+  });
+  const nameMap = new Map(students.map(s => [s.id, s.name]));
+
+  return results
+    .filter(r => nameMap.has(r.studentId))
+    .map(r => ({
+      studentId: r.studentId,
+      studentName: nameMap.get(r.studentId) || '알 수 없음',
+      totalGames: r._count.id,
+      avgScore: Math.round((r._avg.score || 0) * 10) / 10,
+      bestScore: r._max.score || 0,
+      totalTalentEarned: r._sum.earnedTalent || 0,
+    }))
+    .sort((a, b) => b.avgScore - a.avgScore)
+    .slice(0, limit);
+}
+
+export async function getQuizQuestionCount(): Promise<number> {
+  return prisma.quizQuestion.count({ where: { isActive: true } });
+}
+
+// ─── CCM Video 함수 ───
+
+export interface CcmVideo {
+  id: string;
+  title: string;
+  youtubeUrl: string;
+  youtubeId: string;
+  thumbnailUrl: string;
+  category: string;
+  description: string | null;
+  isPinned: boolean;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export async function getAllCcmVideos(
+  category?: string
+): Promise<{ videos: CcmVideo[]; total: number }> {
+  const where: Record<string, unknown> = { isActive: true };
+  if (category && category !== 'all') where.category = category;
+
+  const [total, videos] = await Promise.all([
+    prisma.ccmVideo.count({ where }),
+    prisma.ccmVideo.findMany({
+      where,
+      orderBy: [{ isPinned: 'desc' }, { createdAt: 'desc' }],
+    }),
+  ]);
+
+  return {
+    videos: videos.map(v => ({
+      ...v,
+      description: v.description ?? null,
+      createdAt: v.createdAt.toISOString(),
+      updatedAt: v.updatedAt.toISOString(),
+    })),
+    total,
+  };
+}
+
+export async function getCcmVideoById(id: string): Promise<CcmVideo | undefined> {
+  const v = await prisma.ccmVideo.findFirst({
+    where: { id, isActive: true },
+  });
+  if (!v) return undefined;
+  return {
+    ...v,
+    description: v.description ?? null,
+    createdAt: v.createdAt.toISOString(),
+    updatedAt: v.updatedAt.toISOString(),
+  };
+}
+
+export async function createCcmVideo(data: {
+  title: string;
+  youtubeUrl: string;
+  youtubeId: string;
+  thumbnailUrl: string;
+  category: string;
+  description?: string;
+}): Promise<string> {
+  const v = await prisma.ccmVideo.create({
+    data: {
+      title: data.title,
+      youtubeUrl: data.youtubeUrl,
+      youtubeId: data.youtubeId,
+      thumbnailUrl: data.thumbnailUrl,
+      category: data.category,
+      description: data.description || null,
+    },
+  });
+  return v.id;
+}
+
+export async function updateCcmVideo(id: string, data: {
+  title?: string;
+  youtubeUrl?: string;
+  youtubeId?: string;
+  thumbnailUrl?: string;
+  category?: string;
+  description?: string;
+  isPinned?: boolean;
+  isActive?: boolean;
+}): Promise<void> {
+  const updateData: Record<string, unknown> = {};
+  if (data.title !== undefined) updateData.title = data.title;
+  if (data.youtubeUrl !== undefined) updateData.youtubeUrl = data.youtubeUrl;
+  if (data.youtubeId !== undefined) updateData.youtubeId = data.youtubeId;
+  if (data.thumbnailUrl !== undefined) updateData.thumbnailUrl = data.thumbnailUrl;
+  if (data.category !== undefined) updateData.category = data.category;
+  if (data.description !== undefined) updateData.description = data.description || null;
+  if (data.isPinned !== undefined) updateData.isPinned = data.isPinned;
+  if (data.isActive !== undefined) updateData.isActive = data.isActive;
+  await prisma.ccmVideo.update({ where: { id }, data: updateData });
+}
+
+export async function deactivateCcmVideo(id: string): Promise<void> {
+  await prisma.ccmVideo.update({ where: { id }, data: { isActive: false } });
 }

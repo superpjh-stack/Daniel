@@ -74,6 +74,9 @@ model Student {
 
   // 학부모-자녀 연결
   parentStudents ParentStudent[]
+
+  // 퀴즈 결과
+  quizResults QuizResult[]
 }
 
 // 출석 기록
@@ -145,9 +148,54 @@ model ParentStudent {
   @@unique([parentId, studentId])
 }
 
+// 퀴즈 문제
+model QuizQuestion {
+  id         String   @id @default(cuid())
+  question   String
+  option1    String
+  option2    String
+  option3    String
+  option4    String
+  answer     Int      // 정답 번호 (1-4)
+  category   String   // old_testament, new_testament, person, event, general
+  difficulty String   @default("easy") // easy, medium, hard
+  reference  String?  // 성경 구절 참조
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+// 퀴즈 결과
+model QuizResult {
+  id           String   @id @default(cuid())
+  score        Int      // 맞힌 개수
+  totalCount   Int      @default(10)
+  earnedTalent Int      // 획득 달란트
+  answers      String   // JSON: [{ questionId, selected, correct, isCorrect }]
+  createdAt    DateTime @default(now())
+
+  student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  studentId String
+}
+
 // 설정
 model Setting {
   id    String @id @default(cuid())
   key   String @unique
   value String
+}
+
+// CCM 동영상
+model CcmVideo {
+  id           String   @id @default(cuid())
+  title        String
+  youtubeUrl   String
+  youtubeId    String
+  thumbnailUrl String
+  category     String   @default("praise") // praise, worship, action, special
+  description  String?
+  isPinned     Boolean  @default(false)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }

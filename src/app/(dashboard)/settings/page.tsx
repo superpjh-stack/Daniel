@@ -58,6 +58,7 @@ export default function SettingsPage() {
   // 모달 상태
   const [showUserModal, setShowUserModal] = useState(false);
   const [showClassModal, setShowClassModal] = useState(false);
+  const [editingClass, setEditingClass] = useState<Class | null>(null);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -228,24 +229,47 @@ export default function SettingsPage() {
     }
   };
 
-  const handleAddClass = async () => {
+  const openClassModal = (cls?: Class) => {
+    if (cls) {
+      setEditingClass(cls);
+      const teacher = users.find(u => u.name === cls.teacherName);
+      setClassForm({
+        name: cls.name,
+        grade: cls.grade,
+        teacherId: teacher?.id || '',
+      });
+    } else {
+      setEditingClass(null);
+      setClassForm({ name: '', grade: 1, teacherId: '' });
+    }
+    setShowClassModal(true);
+  };
+
+  const handleSaveClass = async () => {
     if (!classForm.name) return;
 
     setSaving(true);
     try {
-      const res = await fetch('/api/classes', {
-        method: 'POST',
+      const url = editingClass ? `/api/classes/${editingClass.id}` : '/api/classes';
+      const method = editingClass ? 'PUT' : 'POST';
+
+      const res = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(classForm),
       });
 
       if (res.ok) {
         setShowClassModal(false);
+        setEditingClass(null);
         setClassForm({ name: '', grade: 1, teacherId: '' });
         fetchData();
+      } else {
+        const data = await res.json();
+        alert(data.error || '저장에 실패했습니다.');
       }
     } catch (error) {
-      console.error('Failed to add class:', error);
+      console.error('Failed to save class:', error);
     } finally {
       setSaving(false);
     }
@@ -480,7 +504,7 @@ export default function SettingsPage() {
         <div className="space-y-4">
           <div className="flex justify-between items-center">
             <p className="text-gray-600">총 {classes.length}개의 반</p>
-            <Button variant="secondary" onClick={() => setShowClassModal(true)}>
+            <Button variant="secondary" onClick={() => openClassModal()}>
               <Plus size={18} className="mr-2" />
               반 추가
             </Button>
@@ -500,12 +524,22 @@ export default function SettingsPage() {
                       <Badge variant="purple">{c.grade}학년</Badge>
                       <h3 className="font-bold text-gray-800">{c.name}</h3>
                     </div>
-                    <button
-                      onClick={() => handleDeleteClass(c.id)}
-                      className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                    >
-                      <Trash2 size={16} />
-                    </button>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => openClassModal(c)}
+                        className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                        title="수정"
+                      >
+                        <Edit3 size={16} />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteClass(c.id)}
+                        className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                        title="삭제"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
                   </div>
                   <div className="text-sm text-gray-500">
                     <p>👨‍🏫 {c.teacherName || '미배정'}</p>
@@ -891,7 +925,9 @@ export default function SettingsPage() {
               className="bg-white rounded-3xl p-6 w-full max-w-md shadow-2xl"
             >
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold text-gray-800">새 반 추가</h2>
+                <h2 className="text-xl font-bold text-gray-800">
+                  {editingClass ? '반 정보 수정' : '새 반 추가'}
+                </h2>
                 <button
                   onClick={() => setShowClassModal(false)}
                   className="p-2 hover:bg-gray-100 rounded-lg"
@@ -940,11 +976,12 @@ export default function SettingsPage() {
                   <Button
                     variant="secondary"
                     className="flex-1"
-                    onClick={handleAddClass}
+                    onClick={handleSaveClass}
                     isLoading={saving}
                     disabled={!classForm.name}
                   >
-                    추가하기
+                    <Save size={18} className="mr-2" />
+                    {editingClass ? '수정하기' : '추가하기'}
                   </Button>
                 </div>
               </div>

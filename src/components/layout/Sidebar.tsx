@@ -15,6 +15,8 @@ import {
   X,
   Megaphone,
   Search,
+  Gamepad2,
+  Music,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
@@ -37,9 +39,11 @@ const navItems: NavItem[] = [
   { href: '/talent', icon: <Star size={20} />, label: '달란트 관리', hideForParent: true },
   { href: '/students', icon: <Users size={20} />, label: '학생 관리', hideForParent: true },
   { href: '/announcements', icon: <Megaphone size={20} />, label: '공지사항' },
+  { href: '/quiz', icon: <Gamepad2 size={20} />, label: '성경퀴즈', hideForParent: true },
+  { href: '/ccm', icon: <Music size={20} />, label: '추천 CCM' },
   { href: '/shop', icon: <ShoppingBag size={20} />, label: '달란트 시장', adminOnly: true },
   { href: '/stats', icon: <BarChart3 size={20} />, label: '통계', adminOnly: true },
-  { href: '/settings', icon: <Settings size={20} />, label: '설정', adminOnly: true },
+  { href: '/settings', icon: <Settings size={20} />, label: '설정', hideForParent: true },
   { href: '/dashboard', icon: <Home size={20} />, label: '대시보드', hideForParent: true },
   { href: '/parent', icon: <Home size={20} />, label: '대시보드', parentOnly: true },
   { href: '/parent/attendance', icon: <Calendar size={20} />, label: '출석 내역', parentOnly: true },
