@@ -49,10 +49,13 @@ export async function getSession(): Promise<UserPayload | null> {
 
 export async function setSession(payload: UserPayload): Promise<void> {
   const token = await signToken(payload);
+  const { headers } = await import('next/headers');
+  const headersList = await headers();
+  const isHttps = headersList.get('x-forwarded-proto') === 'https';
   const cookieStore = await cookies();
   cookieStore.set('token', token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: isHttps,
     sameSite: 'lax',
     maxAge: 60 * 60 * 24 * 7, // 7 days
   });

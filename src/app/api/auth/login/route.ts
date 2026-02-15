@@ -5,6 +5,7 @@ import { signToken } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
   try {
+    const isHttps = request.headers.get('x-forwarded-proto') === 'https';
     const { loginId, password } = await request.json();
 
     if (!loginId || !password) {
@@ -55,19 +56,19 @@ export async function POST(request: NextRequest) {
 
     response.cookies.set('token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: isHttps,
       sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 7,
     });
     response.cookies.set('user_role', user.role, {
       httpOnly: false,
-      secure: process.env.NODE_ENV === 'production',
+      secure: isHttps,
       sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 7,
     });
     response.cookies.set('user_name', user.name, {
       httpOnly: false,
-      secure: process.env.NODE_ENV === 'production',
+      secure: isHttps,
       sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 7,
     });
