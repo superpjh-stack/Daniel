@@ -1657,3 +1657,121 @@ export async function updateCcmVideo(id: string, data: {
 export async function deactivateCcmVideo(id: string): Promise<void> {
   await prisma.ccmVideo.update({ where: { id }, data: { isActive: false } });
 }
+
+// ─── HeroMedia 함수 ───
+
+export interface HeroMedia {
+  id: string;
+  title: string;
+  subtitle: string | null;
+  mediaType: string;
+  mediaUrl: string;
+  youtubeId: string | null;
+  thumbnailUrl: string | null;
+  sortOrder: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export async function getActiveHeroMedia(): Promise<HeroMedia[]> {
+  const items = await prisma.heroMedia.findMany({
+    where: { isActive: true },
+    orderBy: { sortOrder: 'asc' },
+  });
+  return items.map(m => ({
+    ...m,
+    subtitle: m.subtitle ?? null,
+    youtubeId: m.youtubeId ?? null,
+    thumbnailUrl: m.thumbnailUrl ?? null,
+    createdAt: m.createdAt.toISOString(),
+    updatedAt: m.updatedAt.toISOString(),
+  }));
+}
+
+export async function getAllHeroMedia(): Promise<HeroMedia[]> {
+  const items = await prisma.heroMedia.findMany({
+    orderBy: { sortOrder: 'asc' },
+  });
+  return items.map(m => ({
+    ...m,
+    subtitle: m.subtitle ?? null,
+    youtubeId: m.youtubeId ?? null,
+    thumbnailUrl: m.thumbnailUrl ?? null,
+    createdAt: m.createdAt.toISOString(),
+    updatedAt: m.updatedAt.toISOString(),
+  }));
+}
+
+export async function createHeroMedia(data: {
+  title: string;
+  subtitle?: string;
+  mediaType: string;
+  mediaUrl: string;
+  youtubeId?: string;
+  thumbnailUrl?: string;
+  sortOrder?: number;
+}): Promise<string> {
+  const m = await prisma.heroMedia.create({
+    data: {
+      title: data.title,
+      subtitle: data.subtitle || null,
+      mediaType: data.mediaType,
+      mediaUrl: data.mediaUrl,
+      youtubeId: data.youtubeId || null,
+      thumbnailUrl: data.thumbnailUrl || null,
+      sortOrder: data.sortOrder ?? 0,
+    },
+  });
+  return m.id;
+}
+
+export async function updateHeroMedia(id: string, data: {
+  title?: string;
+  subtitle?: string;
+  mediaType?: string;
+  mediaUrl?: string;
+  youtubeId?: string;
+  thumbnailUrl?: string;
+  sortOrder?: number;
+  isActive?: boolean;
+}): Promise<void> {
+  const updateData: Record<string, unknown> = {};
+  if (data.title !== undefined) updateData.title = data.title;
+  if (data.subtitle !== undefined) updateData.subtitle = data.subtitle || null;
+  if (data.mediaType !== undefined) updateData.mediaType = data.mediaType;
+  if (data.mediaUrl !== undefined) updateData.mediaUrl = data.mediaUrl;
+  if (data.youtubeId !== undefined) updateData.youtubeId = data.youtubeId || null;
+  if (data.thumbnailUrl !== undefined) updateData.thumbnailUrl = data.thumbnailUrl || null;
+  if (data.sortOrder !== undefined) updateData.sortOrder = data.sortOrder;
+  if (data.isActive !== undefined) updateData.isActive = data.isActive;
+  await prisma.heroMedia.update({ where: { id }, data: updateData });
+}
+
+export async function deleteHeroMedia(id: string): Promise<void> {
+  await prisma.heroMedia.delete({ where: { id } });
+}
+
+// ─── 랜딩 페이지 통계 ───
+
+export async function getLandingStats(): Promise<{
+  studentCount: number;
+  attendanceRate: number;
+  totalTalent: number;
+}> {
+  const studentCount = await prisma.student.count();
+
+  // 최근 4주간 출석률
+  const fourWeeksAgo = new Date();
+  fourWeeksAgo.setDate(fourWeeksAgo.getDate() - 28);
+  const [totalAtt, presentAtt] = await Promise.all([
+    prisma.attendance.count({ where: { date: { gte: fourWeeksAgo } } }),
+    prisma.attendance.count({ where: { date: { gte: fourWeeksAgo }, status: { in: ['present', 'late'] } } }),
+  ]);
+  const attendanceRate = totalAtt > 0 ? Math.round((presentAtt / totalAtt) * 100) : 0;
+
+  const result = await prisma.student.aggregate({ _sum: { talentBalance: true } });
+  const totalTalent = result._sum.talentBalance || 0;
+
+  return { studentCount, attendanceRate, totalTalent };
+}

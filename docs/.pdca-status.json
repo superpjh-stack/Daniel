@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-02-15T15:41:49.067Z",
+  "lastUpdated": "2026-02-15T17:06:32.761Z",
   "activeFeatures": [
     "bible-quiz-game",
     "attendance-improvement",
@@ -24,7 +24,17 @@
     "ccm",
     "(dashboard)",
     "login",
-    "logout"
+    "logout",
+    "_lib",
+    "_components",
+    "brick-breaker",
+    "games",
+    "reward",
+    "noahs-ark",
+    "noahs-ark-tetris",
+    "hero-media",
+    "landing",
+    "hero-manage"
   ],
   "primaryFeature": "ccm-video",
   "features": {
@@ -125,6 +135,20 @@
       "archivedAt": "2026-02-15T23:45:00.000Z",
       "archivedTo": "docs/archive/2026-02/ccm-video/"
     },
+    "noahs-ark-tetris": {
+      "phase": "act",
+      "phaseNumber": 5,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-02-15T16:41:22.305Z",
+        "lastUpdated": "2026-02-15T16:41:22.307Z"
+      },
+      "previousPhase": "check",
+      "autoAdvanced": true
+    },
     "daniel": {
       "phase": "do",
       "phaseNumber": 3,
@@ -134,9 +158,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-02-13T18:23:07.481Z",
-        "lastUpdated": "2026-02-15T15:15:19.159Z"
+        "lastUpdated": "2026-02-15T17:01:35.087Z"
       },
-      "lastFile": "/c/AI Make/03 Churchapp/daniel/src/app/layout.tsx"
+      "lastFile": "C:\\AI Make\\03 Churchapp\\daniel\\src\\app\\page.tsx"
     },
     "(dashboard)": {
       "phase": "do",
@@ -160,7 +184,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-02-14T03:49:33.454Z",
-        "lastUpdated": "2026-02-15T14:07:06.247Z"
+        "lastUpdated": "2026-02-15T17:02:44.038Z"
       },
       "lastFile": "C:\\AI Make\\03 Churchapp\\daniel\\src\\components\\layout\\Sidebar.tsx"
     },
@@ -199,9 +223,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-02-14T04:30:11.288Z",
-        "lastUpdated": "2026-02-15T13:39:46.527Z"
+        "lastUpdated": "2026-02-15T17:04:50.317Z"
       },
-      "lastFile": "C:\\AI Make\\03 Churchapp\\daniel\\src\\app\\(dashboard)\\ccm\\[id]\\page.tsx"
+      "lastFile": "C:\\AI Make\\03 Churchapp\\daniel\\src\\app\\api\\hero-media\\[id]\\route.ts"
     },
     "stats": {
       "phase": "do",
@@ -501,6 +525,123 @@
         "lastUpdated": "2026-02-15T14:30:20.528Z"
       },
       "lastFile": "/c/AI Make/03 Churchapp/daniel/src/app/api/auth/logout/route.ts"
+    },
+    "_lib": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-02-15T15:56:46.251Z",
+        "lastUpdated": "2026-02-15T16:31:47.935Z"
+      },
+      "lastFile": "C:\\AI Make\\03 Churchapp\\daniel\\src\\app\\(dashboard)\\games\\noahs-ark\\_lib\\renderer.ts"
+    },
+    "_components": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-02-15T15:58:27.823Z",
+        "lastUpdated": "2026-02-15T16:27:24.183Z"
+      },
+      "lastFile": "C:\\AI Make\\03 Churchapp\\daniel\\src\\app\\(dashboard)\\games\\noahs-ark\\_components\\NoahsArkWrapper.tsx"
+    },
+    "brick-breaker": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-02-15T16:01:20.167Z",
+        "lastUpdated": "2026-02-15T16:04:37.744Z"
+      },
+      "lastFile": "C:\\AI Make\\03 Churchapp\\daniel\\src\\app\\(dashboard)\\games\\brick-breaker\\page.tsx"
+    },
+    "games": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-02-15T16:01:38.912Z",
+        "lastUpdated": "2026-02-15T16:27:52.872Z"
+      },
+      "lastFile": "C:\\AI Make\\03 Churchapp\\daniel\\src\\app\\(dashboard)\\games\\page.tsx"
+    },
+    "reward": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-02-15T16:02:12.456Z",
+        "lastUpdated": "2026-02-15T16:27:49.566Z"
+      },
+      "lastFile": "C:\\AI Make\\03 Churchapp\\daniel\\src\\app\\api\\games\\noahs-ark\\reward\\route.ts"
+    },
+    "noahs-ark": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-02-15T16:27:37.339Z",
+        "lastUpdated": "2026-02-15T16:27:37.339Z"
+      },
+      "lastFile": "C:\\AI Make\\03 Churchapp\\daniel\\src\\app\\(dashboard)\\games\\noahs-ark\\page.tsx"
+    },
+    "hero-media": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-02-15T16:59:53.070Z",
+        "lastUpdated": "2026-02-15T17:06:32.760Z"
+      },
+      "lastFile": "C:\\AI Make\\03 Churchapp\\daniel\\src\\app\\api\\hero-media\\route.ts"
+    },
+    "landing": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-02-15T17:00:52.107Z",
+        "lastUpdated": "2026-02-15T17:01:18.159Z"
+      },
+      "lastFile": "C:\\AI Make\\03 Churchapp\\daniel\\src\\components\\landing\\StatsHighlight.tsx"
+    },
+    "hero-manage": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-02-15T17:02:29.673Z",
+        "lastUpdated": "2026-02-15T17:02:29.673Z"
+      },
+      "lastFile": "C:\\AI Make\\03 Churchapp\\daniel\\src\\app\\(dashboard)\\hero-manage\\page.tsx"
     }
   },
   "pipeline": {
@@ -511,7 +652,7 @@
   "session": {
     "startedAt": "2026-02-13T11:14:24.300Z",
     "onboardingCompleted": false,
-    "lastActivity": "2026-02-15T15:41:49.067Z"
+    "lastActivity": "2026-02-15T17:06:32.761Z"
   },
   "history": [
     {
@@ -1517,6 +1658,282 @@
     {
       "timestamp": "2026-02-15T15:41:49.066Z",
       "feature": "prisma",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-15T15:56:46.252Z",
+      "feature": "_lib",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-15T15:57:07.927Z",
+      "feature": "_lib",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-15T15:57:46.465Z",
+      "feature": "_lib",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-15T15:58:27.823Z",
+      "feature": "_components",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-15T16:00:51.120Z",
+      "feature": "_components",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-15T16:01:10.013Z",
+      "feature": "_components",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-15T16:01:20.167Z",
+      "feature": "brick-breaker",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-15T16:01:38.912Z",
+      "feature": "games",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-15T16:02:12.456Z",
+      "feature": "reward",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-15T16:02:19.872Z",
+      "feature": "layout",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-15T16:02:24.941Z",
+      "feature": "layout",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-15T16:04:37.744Z",
+      "feature": "brick-breaker",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-15T16:04:47.164Z",
+      "feature": "_components",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-15T16:21:16.609Z",
+      "feature": "_lib",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-15T16:21:35.157Z",
+      "feature": "_lib",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-15T16:21:43.176Z",
+      "feature": "_lib",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-15T16:22:01.523Z",
+      "feature": "_lib",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-15T16:22:11.771Z",
+      "feature": "_lib",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-15T16:22:43.022Z",
+      "feature": "_lib",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-15T16:25:52.321Z",
+      "feature": "_lib",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-15T16:26:50.468Z",
+      "feature": "_components",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-15T16:26:56.367Z",
+      "feature": "_components",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-15T16:27:05.679Z",
+      "feature": "_components",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-15T16:27:18.361Z",
+      "feature": "_components",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-15T16:27:24.183Z",
+      "feature": "_components",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-15T16:27:37.339Z",
+      "feature": "noahs-ark",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-15T16:27:49.566Z",
+      "feature": "reward",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-15T16:27:52.872Z",
+      "feature": "games",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-15T16:31:18.573Z",
+      "feature": "_lib",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-15T16:31:24.139Z",
+      "feature": "_lib",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-15T16:31:35.076Z",
+      "feature": "_lib",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-15T16:31:47.935Z",
+      "feature": "_lib",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-15T16:41:22.307Z",
+      "feature": "noahs-ark-tetris",
+      "phase": "act",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-15T16:59:11.036Z",
+      "feature": "daniel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-15T16:59:53.070Z",
+      "feature": "hero-media",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-15T17:00:05.367Z",
+      "feature": "[id]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-15T17:00:52.107Z",
+      "feature": "landing",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-15T17:01:00.014Z",
+      "feature": "landing",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-15T17:01:08.697Z",
+      "feature": "landing",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-15T17:01:18.159Z",
+      "feature": "landing",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-15T17:01:35.087Z",
+      "feature": "daniel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-15T17:02:29.673Z",
+      "feature": "hero-manage",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-15T17:02:37.359Z",
+      "feature": "layout",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-15T17:02:44.038Z",
+      "feature": "layout",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-15T17:04:50.317Z",
+      "feature": "[id]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-15T17:06:32.761Z",
+      "feature": "hero-media",
       "phase": "do",
       "action": "updated"
     }

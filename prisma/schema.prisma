@@ -185,6 +185,21 @@ model Setting {
   value String
 }
 
+// 히어로 미디어 (랜딩 페이지 캐러셀)
+model HeroMedia {
+  id           String   @id @default(cuid())
+  title        String
+  subtitle     String?
+  mediaType    String                     // "image" | "youtube"
+  mediaUrl     String
+  youtubeId    String?
+  thumbnailUrl String?
+  sortOrder    Int      @default(0)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
 // CCM 동영상
 model CcmVideo {
   id           String   @id @default(cuid())
