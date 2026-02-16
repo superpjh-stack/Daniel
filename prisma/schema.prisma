@@ -28,6 +28,10 @@ model User {
 
   // 학부모-자녀 연결
   parentStudents ParentStudent[]
+
+  // 사진첩
+  photoPosts    PhotoPost[]
+  photoComments PhotoComment[]
 }
 
 // 반
@@ -198,6 +202,47 @@ model HeroMedia {
   isActive     Boolean  @default(true)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+}
+
+// 사진 게시글
+model PhotoPost {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  category    String   @default("daily")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  author    User   @relation(fields: [authorId], references: [id])
+  authorId  String
+
+  photos    Photo[]
+  comments  PhotoComment[]
+}
+
+// 개별 사진
+model Photo {
+  id           String   @id @default(cuid())
+  imageUrl     String
+  thumbnailUrl String
+  sortOrder    Int      @default(0)
+  createdAt    DateTime @default(now())
+
+  post    PhotoPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId  String
+}
+
+// 사진 댓글
+model PhotoComment {
+  id        String   @id @default(cuid())
+  content   String
+  createdAt DateTime @default(now())
+
+  post      PhotoPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId    String
+
+  author    User   @relation(fields: [authorId], references: [id])
+  authorId  String
 }
 
 // CCM 동영상

@@ -1754,6 +1754,191 @@ export async function deleteHeroMedia(id: string): Promise<void> {
 
 // ─── 랜딩 페이지 통계 ───
 
+// ─── PhotoPost 인터페이스 ───
+
+export interface PhotoPostSummary {
+  id: string;
+  title: string;
+  category: string;
+  thumbnailUrl: string;
+  photoCount: number;
+  commentCount: number;
+  authorName: string;
+  createdAt: string;
+}
+
+export interface PhotoPostDetail {
+  id: string;
+  title: string;
+  description: string | null;
+  category: string;
+  authorId: string;
+  authorName: string;
+  createdAt: string;
+  photos: {
+    id: string;
+    imageUrl: string;
+    thumbnailUrl: string;
+    sortOrder: number;
+  }[];
+  comments: {
+    id: string;
+    content: string;
+    authorId: string;
+    authorName: string;
+    createdAt: string;
+  }[];
+}
+
+// ─── PhotoPost 함수 ───
+
+export async function getPhotoPosts(
+  category?: string,
+  page: number = 1,
+  limit: number = 12
+): Promise<{ posts: PhotoPostSummary[]; total: number }> {
+  const where: Record<string, unknown> = {};
+  if (category && category !== 'all') where.category = category;
+
+  const [total, posts] = await Promise.all([
+    prisma.photoPost.count({ where }),
+    prisma.photoPost.findMany({
+      where,
+      include: {
+        author: { select: { name: true } },
+        photos: { orderBy: { sortOrder: 'asc' }, take: 1, select: { thumbnailUrl: true } },
+        _count: { select: { photos: true, comments: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+      skip: (page - 1) * limit,
+      take: limit,
+    }),
+  ]);
+
+  return {
+    posts: posts.map(p => ({
+      id: p.id,
+      title: p.title,
+      category: p.category,
+      thumbnailUrl: p.photos[0]?.thumbnailUrl || '',
+      photoCount: p._count.photos,
+      commentCount: p._count.comments,
+      authorName: p.author.name,
+      createdAt: p.createdAt.toISOString(),
+    })),
+    total,
+  };
+}
+
+export async function getPhotoPostById(id: string): Promise<PhotoPostDetail | undefined> {
+  const p = await prisma.photoPost.findUnique({
+    where: { id },
+    include: {
+      author: { select: { name: true } },
+      photos: { orderBy: { sortOrder: 'asc' } },
+      comments: {
+        include: { author: { select: { name: true } } },
+        orderBy: { createdAt: 'desc' },
+      },
+    },
+  });
+  if (!p) return undefined;
+  return {
+    id: p.id,
+    title: p.title,
+    description: p.description,
+    category: p.category,
+    authorId: p.authorId,
+    authorName: p.author.name,
+    createdAt: p.createdAt.toISOString(),
+    photos: p.photos.map(ph => ({
+      id: ph.id,
+      imageUrl: ph.imageUrl,
+      thumbnailUrl: ph.thumbnailUrl,
+      sortOrder: ph.sortOrder,
+    })),
+    comments: p.comments.map(c => ({
+      id: c.id,
+      content: c.content,
+      authorId: c.authorId,
+      authorName: c.author.name,
+      createdAt: c.createdAt.toISOString(),
+    })),
+  };
+}
+
+export async function createPhotoPost(data: {
+  title: string;
+  description?: string;
+  category: string;
+  authorId: string;
+  photos: { imageUrl: string; thumbnailUrl: string; sortOrder: number }[];
+}): Promise<string> {
+  const post = await prisma.photoPost.create({
+    data: {
+      title: data.title,
+      description: data.description || null,
+      category: data.category,
+      authorId: data.authorId,
+      photos: {
+        create: data.photos.map(ph => ({
+          imageUrl: ph.imageUrl,
+          thumbnailUrl: ph.thumbnailUrl,
+          sortOrder: ph.sortOrder,
+        })),
+      },
+    },
+  });
+  return post.id;
+}
+
+export async function updatePhotoPost(
+  id: string,
+  data: { title?: string; description?: string; category?: string }
+): Promise<void> {
+  const updateData: Record<string, unknown> = {};
+  if (data.title !== undefined) updateData.title = data.title;
+  if (data.description !== undefined) updateData.description = data.description || null;
+  if (data.category !== undefined) updateData.category = data.category;
+  await prisma.photoPost.update({ where: { id }, data: updateData });
+}
+
+export async function deletePhotoPost(id: string): Promise<void> {
+  await prisma.photoPost.delete({ where: { id } });
+}
+
+// ─── PhotoComment 함수 ───
+
+export async function createPhotoComment(data: {
+  postId: string;
+  authorId: string;
+  content: string;
+}): Promise<string> {
+  const c = await prisma.photoComment.create({
+    data: {
+      postId: data.postId,
+      authorId: data.authorId,
+      content: data.content,
+    },
+    include: { author: { select: { name: true } } },
+  });
+  return c.id;
+}
+
+export async function deletePhotoComment(id: string): Promise<void> {
+  await prisma.photoComment.delete({ where: { id } });
+}
+
+export async function getPhotoCommentById(
+  id: string
+): Promise<{ id: string; authorId: string } | undefined> {
+  const c = await prisma.photoComment.findUnique({
+    where: { id },
+    select: { id: true, authorId: true },
+  });
+  return c || undefined;
+}
+
 export async function getLandingStats(): Promise<{
   studentCount: number;
   attendanceRate: number;

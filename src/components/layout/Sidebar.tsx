@@ -20,6 +20,7 @@ import {
   Trophy,
   LogOut,
   ImageIcon,
+  Camera,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
@@ -45,6 +46,7 @@ const navItems: NavItem[] = [
   { href: '/announcements', icon: <Megaphone size={20} />, label: '공지사항' },
   { href: '/quiz', icon: <Gamepad2 size={20} />, label: '성경퀴즈', hideForParent: true },
   { href: '/ccm', icon: <Music size={20} />, label: '추천 CCM' },
+  { href: '/gallery', icon: <Camera size={20} />, label: '사진첩' },
   { href: '/games', icon: <Trophy size={20} />, label: '게임', hideForParent: true },
   { href: '/shop', icon: <ShoppingBag size={20} />, label: '달란트 시장', adminOnly: true },
   { href: '/hero-manage', icon: <ImageIcon size={20} />, label: '메인 관리', adminOnly: true },
