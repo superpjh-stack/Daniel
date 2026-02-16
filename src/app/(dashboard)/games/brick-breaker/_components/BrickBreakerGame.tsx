@@ -8,6 +8,8 @@ import {
   updateBall, allBricksDestroyed,
   drawGame, drawReadyScreen, drawPausedOverlay,
 } from '../_lib/gameEngine';
+import { soundEngine } from '../../_shared/soundEngine';
+import MuteButton from '../../_shared/MuteButton';
 import QuizModal from './QuizModal';
 import GameOverModal from './GameOverModal';
 
@@ -119,12 +121,22 @@ export default function BrickBreakerGame({ quizzes, answers, studentId }: Props)
     // 물리 업데이트
     const result = updateBall(state, width, height);
 
+    // 사운드
+    if (result.wallBounce) soundEngine.playWallBounce();
+    if (result.paddleHit) soundEngine.playPaddleHit();
+    if (result.brickHit) {
+      if (result.brickHit.destroyed) soundEngine.playBrickBreak(result.brickHit.type);
+      else soundEngine.playBrickDamage();
+    }
+
     if (result.lost) {
       state.lives--;
       if (state.lives <= 0) {
         state.status = 'game-over';
+        soundEngine.playGameOver();
         setGameOverData({ score: state.score, stage: state.stage, quizCorrect: state.quizCorrect, quizTotal: state.quizTotal });
       } else {
+        soundEngine.playBallLost();
         // 공/패들 리셋
         const config = STAGES[state.stage - 1];
         const newBall = createBall(width, height, config.ballSpeed);
@@ -154,9 +166,11 @@ export default function BrickBreakerGame({ quizzes, answers, studentId }: Props)
     if (allBricksDestroyed(state.bricks)) {
       if (state.stage >= 5) {
         state.status = 'all-clear';
+        soundEngine.playAllClear();
         setGameOverData({ score: state.score, stage: state.stage, quizCorrect: state.quizCorrect, quizTotal: state.quizTotal });
       } else {
         state.status = 'stage-clear';
+        soundEngine.playStageClear();
         setTimeout(() => {
           initStage(state.stage + 1, state.score, state.lives, state.quizCorrect, state.quizTotal);
         }, 500);
@@ -196,8 +210,12 @@ export default function BrickBreakerGame({ quizzes, answers, studentId }: Props)
   function handleCanvasClick() {
     const state = stateRef.current;
     if (!state) return;
-    if (state.status === 'ready') state.status = 'playing';
-    else if (state.status === 'paused') state.status = 'playing';
+    if (state.status === 'ready') {
+      state.status = 'playing';
+      soundEngine.playGameStart();
+    } else if (state.status === 'paused') {
+      state.status = 'playing';
+    }
   }
 
   function handleMouseMove(e: React.MouseEvent<HTMLCanvasElement>) {
@@ -223,6 +241,9 @@ export default function BrickBreakerGame({ quizzes, answers, studentId }: Props)
     if (correct) {
       state.score += 100;
       state.quizCorrect++;
+      soundEngine.playQuizCorrect();
+    } else {
+      soundEngine.playQuizIncorrect();
     }
     setQuizModal(null);
     state.status = 'playing';
@@ -246,12 +267,15 @@ export default function BrickBreakerGame({ quizzes, answers, studentId }: Props)
         >
           ← 뒤로
         </button>
-        <button
-          onClick={handlePause}
-          className="px-3 py-1 text-sm bg-slate-100 rounded-lg hover:bg-slate-200 text-slate-600"
-        >
-          ⏸ 일시정지
-        </button>
+        <div className="flex items-center gap-2">
+          <MuteButton />
+          <button
+            onClick={handlePause}
+            className="px-3 py-1 text-sm bg-slate-100 rounded-lg hover:bg-slate-200 text-slate-600"
+          >
+            ⏸ 일시정지
+          </button>
+        </div>
       </div>
 
       {/* 캔버스 */}

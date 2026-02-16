@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import type { RewardResult } from '../_lib/types';
+import { soundEngine } from '../../_shared/soundEngine';
 
 interface Props {
   score: number;
@@ -37,6 +38,7 @@ export default function GameOverModal({
       } else {
         setReward(data);
         setClaimed(true);
+        soundEngine.playRewardClaim();
       }
     } catch {
       setError('네트워크 오류가 발생했습니다.');

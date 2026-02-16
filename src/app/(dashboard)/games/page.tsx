@@ -21,6 +21,14 @@ const games = [
     href: '/games/noahs-ark',
     available: true,
   },
+  {
+    id: 'davids-sling',
+    title: '다윗의 물맷돌',
+    description: '골리앗의 약점을 조준하여 물맷돌을 날려보세요!',
+    emoji: '\u2694\uFE0F',
+    href: '/games/davids-sling',
+    available: true,
+  },
 ];
 
 export default function GamesPage() {

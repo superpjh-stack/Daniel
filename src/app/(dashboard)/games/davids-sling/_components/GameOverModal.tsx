@@ -27,7 +27,7 @@ export default function GameOverModal({
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch('/api/games/brick-breaker/reward', {
+      const res = await fetch('/api/games/davids-sling/reward', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ studentId, score, stageCleared, quizCorrect, quizTotal }),
@@ -55,8 +55,8 @@ export default function GameOverModal({
         </h3>
 
         {isAllClear && (
-          <p className="text-center text-indigo-600 font-medium">
-            Stage 5 올클리어!
+          <p className="text-center text-amber-600 font-medium">
+            {'\u2694\uFE0F'} 골리앗을 무찔렀습니다! Stage 5 올클리어!
           </p>
         )}
 
@@ -68,7 +68,6 @@ export default function GameOverModal({
           )}
         </div>
 
-        {/* 보상 결과 */}
         {reward && (
           <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-center space-y-1">
             <p className="text-amber-700 font-bold">

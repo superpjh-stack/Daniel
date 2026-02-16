@@ -23,6 +23,8 @@ import {
   type Layout,
   type TouchAreas,
 } from '../_lib/renderer';
+import { soundEngine } from '../../_shared/soundEngine';
+import MuteButton from '../../_shared/MuteButton';
 import QuizModal from './QuizModal';
 import StageClearModal from './StageClearModal';
 import GameOverModal from './GameOverModal';
@@ -88,6 +90,7 @@ export default function NoahsArkGame({ studentId }: Props) {
   const handleStart = useCallback(() => {
     const s = stateRef.current;
     if (s.status === 'ready') {
+      soundEngine.playGameStart();
       startStage(s.stage);
     }
   }, [startStage]);
@@ -111,13 +114,13 @@ export default function NoahsArkGame({ studentId }: Props) {
 
     switch (action) {
       case 'left':
-        tryMove(s.board, s.activeBlock, 0, -1);
+        if (tryMove(s.board, s.activeBlock, 0, -1)) soundEngine.playBlockMove();
         break;
       case 'right':
-        tryMove(s.board, s.activeBlock, 0, 1);
+        if (tryMove(s.board, s.activeBlock, 0, 1)) soundEngine.playBlockMove();
         break;
       case 'rotate':
-        tryRotate(s.board, s.activeBlock);
+        if (tryRotate(s.board, s.activeBlock)) soundEngine.playBlockRotate();
         break;
       case 'softdrop':
         if (tryMove(s.board, s.activeBlock, 1, 0)) {
@@ -127,6 +130,7 @@ export default function NoahsArkGame({ studentId }: Props) {
       case 'drop': {
         const bonus = hardDrop(s.board, s.activeBlock);
         s.score += bonus;
+        soundEngine.playHardDrop();
         land();
         break;
       }
@@ -139,11 +143,21 @@ export default function NoahsArkGame({ studentId }: Props) {
     const stageConfig = STAGES[s.stage - 1];
     const result = processLanding(s);
 
+    soundEngine.playBlockLock();
+
+    if (result.linesRemoved > 0) {
+      soundEngine.playLineClear(result.linesRemoved);
+    }
+
     // 균형 체크 → 게임 오버
     const balanceStatus = getBalanceStatus(result.balanceTilt, stageConfig);
+    if (balanceStatus === 'warning') {
+      soundEngine.playBalanceWarning();
+    }
     if (balanceStatus === 'danger') {
       s.status = 'game-over';
       setStatus('game-over');
+      soundEngine.playGameOver();
       setGameOverData({
         score: s.score,
         stageCleared: s.stage - 1,
@@ -158,6 +172,7 @@ export default function NoahsArkGame({ studentId }: Props) {
     if (isTopReached(s.board)) {
       s.status = 'game-over';
       setStatus('game-over');
+      soundEngine.playGameOver();
       setGameOverData({
         score: s.score,
         stageCleared: s.stage - 1,
@@ -187,6 +202,7 @@ export default function NoahsArkGame({ studentId }: Props) {
         // 전체 클리어
         s.status = 'all-clear';
         setStatus('all-clear');
+        soundEngine.playAllClear();
         setGameOverData({
           score: s.score,
           stageCleared: 5,
@@ -197,6 +213,7 @@ export default function NoahsArkGame({ studentId }: Props) {
       } else {
         s.status = 'stage-clear';
         setStatus('stage-clear');
+        soundEngine.playStageClear();
         setStageClearData({
           stage: s.stage,
           verse: stageConfig.verse,
@@ -213,7 +230,12 @@ export default function NoahsArkGame({ studentId }: Props) {
   // 퀴즈 답변 처리
   const handleQuizAnswer = useCallback((correct: boolean) => {
     const s = stateRef.current;
-    if (correct) s.quizCorrect++;
+    if (correct) {
+      s.quizCorrect++;
+      soundEngine.playQuizCorrect();
+    } else {
+      soundEngine.playQuizIncorrect();
+    }
     s.score += correct ? 200 : 50;
     s.status = 'playing';
     setStatus('playing');
@@ -407,6 +429,11 @@ export default function NoahsArkGame({ studentId }: Props) {
         className="block rounded-xl shadow-lg"
         style={{ touchAction: 'none', maxWidth: '100%' }}
       />
+
+      {/* 음소거 버튼 */}
+      <div className="absolute top-2 right-2 z-10">
+        <MuteButton />
+      </div>
 
       {/* 퀴즈 모달 */}
       {status === 'quiz' && currentQuiz && (

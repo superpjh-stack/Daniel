@@ -41,14 +41,26 @@ export function setPaddleX(paddle: Paddle, x: number, canvasW: number): void {
  * 공 업데이트 + 충돌 감지. 퀴즈 벽돌 히트 시 quizIndex 반환.
  * 공을 놓치면 false 반환.
  */
+export interface BallUpdateResult {
+  lost: boolean;
+  quizTriggered: number | null;
+  verseTriggered: string | null;
+  wallBounce: boolean;
+  paddleHit: boolean;
+  brickHit: { type: string; destroyed: boolean } | null;
+}
+
 export function updateBall(
   state: GameState,
   canvasW: number,
   canvasH: number
-): { lost: boolean; quizTriggered: number | null; verseTriggered: string | null } {
+): BallUpdateResult {
   const { ball, paddle, bricks } = state;
   let quizTriggered: number | null = null;
   let verseTriggered: string | null = null;
+  let wallBounce = false;
+  let paddleHit = false;
+  let brickHit: { type: string; destroyed: boolean } | null = null;
 
   ball.x += ball.dx;
   ball.y += ball.dy;
@@ -57,21 +69,24 @@ export function updateBall(
   if (ball.x - ball.radius <= 0) {
     ball.x = ball.radius;
     ball.dx = Math.abs(ball.dx);
+    wallBounce = true;
   }
   if (ball.x + ball.radius >= canvasW) {
     ball.x = canvasW - ball.radius;
     ball.dx = -Math.abs(ball.dx);
+    wallBounce = true;
   }
 
   // 상단 벽
   if (ball.y - ball.radius <= 0) {
     ball.y = ball.radius;
     ball.dy = Math.abs(ball.dy);
+    wallBounce = true;
   }
 
   // 하단 — 공 놓침
   if (ball.y + ball.radius >= canvasH) {
-    return { lost: true, quizTriggered: null, verseTriggered: null };
+    return { lost: true, quizTriggered: null, verseTriggered: null, wallBounce: false, paddleHit: false, brickHit: null };
   }
 
   // 패들 충돌
@@ -88,6 +103,7 @@ export function updateBall(
     const angle = (hitPos - 0.5) * 1.2; // -0.6 ~ +0.6
     ball.dx = ball.speed * Math.sin(angle * Math.PI);
     ball.dy = -ball.speed * Math.cos(angle * Math.PI);
+    paddleHit = true;
   }
 
   // 벽돌 충돌
@@ -115,7 +131,10 @@ export function updateBall(
       }
 
       brick.hp--;
-      if (brick.hp <= 0) {
+      const destroyed = brick.hp <= 0;
+      brickHit = { type: brick.type, destroyed };
+
+      if (destroyed) {
         brick.destroyed = true;
         state.score += brick.points;
 
@@ -134,7 +153,7 @@ export function updateBall(
     }
   }
 
-  return { lost: false, quizTriggered, verseTriggered };
+  return { lost: false, quizTriggered, verseTriggered, wallBounce, paddleHit, brickHit };
 }
 
 export function allBricksDestroyed(bricks: Brick[]): boolean {
