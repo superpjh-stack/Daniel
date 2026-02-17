@@ -1,7 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Share2, Copy, Check } from 'lucide-react';
+
+interface KakaoSDK {
+  init: (key: string) => void;
+  isInitialized: () => boolean;
+  Share: { sendDefault: (opts: Record<string, unknown>) => void };
+}
 
 interface GalleryShareButtonsProps {
   title: string;
@@ -10,8 +16,40 @@ interface GalleryShareButtonsProps {
 
 export default function GalleryShareButtons({ title, imageUrl }: GalleryShareButtonsProps) {
   const [copied, setCopied] = useState(false);
+  const [kakaoReady, setKakaoReady] = useState(false);
 
   const shareUrl = typeof window !== 'undefined' ? window.location.href : '';
+
+  useEffect(() => {
+    const kakaoKey = process.env.NEXT_PUBLIC_KAKAO_JS_KEY;
+    if (!kakaoKey) return;
+
+    const initKakao = () => {
+      const w = window as typeof window & { Kakao?: KakaoSDK };
+      if (w.Kakao && !w.Kakao.isInitialized()) {
+        w.Kakao.init(kakaoKey);
+      }
+      if (w.Kakao?.isInitialized()) {
+        setKakaoReady(true);
+      }
+    };
+
+    // SDK가 이미 로드된 경우
+    if ((window as typeof window & { Kakao?: KakaoSDK }).Kakao) {
+      initKakao();
+      return;
+    }
+
+    // SDK 로딩 대기
+    const check = setInterval(() => {
+      if ((window as typeof window & { Kakao?: KakaoSDK }).Kakao) {
+        clearInterval(check);
+        initKakao();
+      }
+    }, 300);
+
+    return () => clearInterval(check);
+  }, []);
 
   const handleCopy = async () => {
     try {
@@ -31,7 +69,7 @@ export default function GalleryShareButtons({ title, imageUrl }: GalleryShareBut
   };
 
   const handleKakao = () => {
-    const w = window as typeof window & { Kakao?: { isInitialized: () => boolean; Share: { sendDefault: (opts: Record<string, unknown>) => void } } };
+    const w = window as typeof window & { Kakao?: KakaoSDK };
     if (w.Kakao && w.Kakao.isInitialized()) {
       w.Kakao.Share.sendDefault({
         objectType: 'feed',
@@ -55,7 +93,7 @@ export default function GalleryShareButtons({ title, imageUrl }: GalleryShareBut
         ],
       });
     } else {
-      alert('카카오톡 공유 기능이 준비되지 않았습니다.');
+      alert('카카오톡 공유 기능을 사용하려면 카카오 앱 키 설정이 필요합니다.');
     }
   };
 

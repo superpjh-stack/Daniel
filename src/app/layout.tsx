@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -44,6 +45,10 @@ export default function RootLayout({
         />
       </head>
       <body className="antialiased min-h-screen">
+        <Script
+          src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.4/kakao.min.js"
+          strategy="afterInteractive"
+        />
         {/* 별 배경 */}
         <div className="stars-bg">
           <span className="star" style={{ top: '10%', left: '5%', animationDelay: '0s' }}>⭐</span>

@@ -1,16 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSession } from '@/lib/auth';
-import { submitQuizAndAwardTalent } from '@/lib/db';
+import { scoreQuizAnswers } from '@/lib/db';
 
 export async function POST(request: NextRequest) {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
   const body = await request.json();
-  const { studentId, answers } = body;
+  const { answers } = body;
 
-  if (!studentId || !answers || !Array.isArray(answers) || answers.length === 0) {
-    return NextResponse.json({ error: '학생 ID와 답안을 입력해주세요.' }, { status: 400 });
+  if (!answers || !Array.isArray(answers) || answers.length === 0) {
+    return NextResponse.json({ error: '답안을 입력해주세요.' }, { status: 400 });
   }
 
   for (const a of answers) {
@@ -19,6 +15,6 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  const result = await submitQuizAndAwardTalent(studentId, answers);
+  const result = await scoreQuizAnswers(answers);
   return NextResponse.json(result);
 }

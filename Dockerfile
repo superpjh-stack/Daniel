@@ -25,21 +25,29 @@ COPY node_modules/@prisma/client-runtime-utils ./node_modules/@prisma/client-run
 COPY node_modules/@prisma/driver-adapter-utils ./node_modules/@prisma/driver-adapter-utils
 COPY node_modules/@prisma/debug ./node_modules/@prisma/debug
 
+# Turbopack이 @aws-sdk를 외부 모듈로 처리하므로 별도 복사
+COPY node_modules/@aws-sdk ./node_modules/@aws-sdk
+COPY node_modules/@smithy ./node_modules/@smithy
+
 # Turbopack이 해시된 이름으로 외부 모듈을 참조 - 심링크로 해결
 RUN node -e " \
   const fs=require('fs'), path=require('path'); \
   const dir='.next/server/chunks'; \
   const seen=new Set(); \
+  const patterns=[ \
+    /\"(@prisma\/[a-z-]+)-([a-f0-9]{16})\"/g, \
+    /\"(@aws-sdk\/[a-z0-9-]+)-([a-f0-9]{16})\"/g, \
+    /\"(@smithy\/[a-z0-9-]+)-([a-f0-9]{16})\"/g, \
+    /\"(pg)-([a-f0-9]{16})\"/g \
+  ]; \
   fs.readdirSync(dir).filter(f=>f.endsWith('.js')).forEach(f=>{ \
     const c=fs.readFileSync(path.join(dir,f),'utf8'); \
-    for(const m of c.matchAll(/\"(@prisma\/[a-z-]+)-([a-f0-9]{16})\"/g)){ \
-      const key=m[1]+'-'+m[2]; if(seen.has(key))continue; seen.add(key); \
-      try{fs.symlinkSync('/app/node_modules/'+m[1],'/app/node_modules/'+m[1]+'-'+m[2]);console.log('symlink:',key)}catch(e){} \
-    } \
-    for(const m of c.matchAll(/\"(pg)-([a-f0-9]{16})\"/g)){ \
-      const key=m[1]+'-'+m[2]; if(seen.has(key))continue; seen.add(key); \
-      try{fs.symlinkSync('/app/node_modules/'+m[1],'/app/node_modules/'+m[1]+'-'+m[2]);console.log('symlink:',key)}catch(e){} \
-    } \
+    patterns.forEach(p=>{ \
+      for(const m of c.matchAll(p)){ \
+        const key=m[1]+'-'+m[2]; if(seen.has(key))continue; seen.add(key); \
+        try{fs.symlinkSync('/app/node_modules/'+m[1],'/app/node_modules/'+m[1]+'-'+m[2]);console.log('symlink:',key)}catch(e){} \
+      } \
+    }); \
   });"
 
 RUN chown -R nextjs:nodejs /app

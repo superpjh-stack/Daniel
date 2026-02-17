@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Trophy, RotateCcw, Home, CheckCircle, XCircle, BookOpen } from 'lucide-react';
+import { Trophy, RotateCcw, CheckCircle, XCircle, BookOpen } from 'lucide-react';
 import { Card } from '@/components/ui';
 
 interface QuizDetail {
@@ -19,16 +19,25 @@ interface QuizDetail {
 interface QuizResultData {
   score: number;
   totalCount: number;
+  details: QuizDetail[];
+  answers: { questionId: string; selected: number }[];
+}
+
+interface SavedResult {
   earnedTalent: number;
   talentAwarded: boolean;
+  studentMatched: boolean;
   newBalance: number;
-  details: QuizDetail[];
-  studentName: string;
+  playerName: string;
 }
 
 export default function QuizResultPage() {
   const router = useRouter();
   const [result, setResult] = useState<QuizResultData | null>(null);
+  const [playerName, setPlayerName] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [savedResult, setSavedResult] = useState<SavedResult | null>(null);
 
   useEffect(() => {
     const stored = sessionStorage.getItem('quizResult');
@@ -51,9 +60,8 @@ export default function QuizResultPage() {
     );
   }
 
-  const { score, totalCount, earnedTalent, talentAwarded, newBalance, details, studentName } = result;
+  const { score, totalCount, details } = result;
   const wrongAnswers = details.filter(d => !d.isCorrect);
-  const percentage = Math.round((score / totalCount) * 100);
 
   let scoreColor = 'text-red-500';
   let scoreEmoji = '😢';
@@ -74,6 +82,34 @@ export default function QuizResultPage() {
 
   const stars = Array.from({ length: totalCount }, (_, i) => i < score);
 
+  async function handleSave() {
+    if (!playerName.trim()) {
+      alert('이름을 입력해주세요.');
+      return;
+    }
+    setSaving(true);
+    try {
+      const res = await fetch('/api/quiz/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          playerName: playerName.trim(),
+          answers: result!.answers,
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        alert(err.error || '저장에 실패했습니다.');
+        return;
+      }
+      const data = await res.json();
+      setSavedResult(data);
+      setSaved(true);
+    } finally {
+      setSaving(false);
+    }
+  }
+
   return (
     <div className="space-y-6 max-w-lg mx-auto">
       {/* Score Card */}
@@ -92,8 +128,7 @@ export default function QuizResultPage() {
             {scoreEmoji}
           </motion.div>
 
-          <h1 className="text-lg font-bold text-slate-800 mb-1">퀴즈 완료!</h1>
-          <p className="text-sm text-slate-500 mb-4">{studentName}</p>
+          <h1 className="text-lg font-bold text-slate-800 mb-3">퀴즈 완료!</h1>
 
           <div className={`text-5xl font-black ${scoreColor} mb-2`}>
             {score} <span className="text-2xl text-slate-400">/ {totalCount}</span>
@@ -114,25 +149,7 @@ export default function QuizResultPage() {
             ))}
           </div>
 
-          <p className="text-sm font-medium text-slate-600 mb-4">{scoreMessage}</p>
-
-          {/* Talent Info */}
-          <div className="bg-slate-50 rounded-xl p-4 space-y-1">
-            {talentAwarded && earnedTalent > 0 ? (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.5 }}
-              >
-                <p className="text-amber-600 font-bold text-lg">+{earnedTalent} 달란트 획득!</p>
-                <p className="text-sm text-slate-500">현재 잔액: <b className="text-slate-700">{newBalance}</b> 달란트</p>
-              </motion.div>
-            ) : earnedTalent === 0 && score === 0 ? (
-              <p className="text-sm text-slate-500">0점이라 달란트가 지급되지 않았어요.</p>
-            ) : !talentAwarded ? (
-              <p className="text-sm text-slate-500">오늘 달란트 획득 횟수를 초과했어요.</p>
-            ) : null}
-          </div>
+          <p className="text-sm font-medium text-slate-600">{scoreMessage}</p>
         </Card>
       </motion.div>
 
@@ -156,11 +173,11 @@ export default function QuizResultPage() {
                 <div className="space-y-1 text-sm">
                   <div className="flex items-center gap-2 text-red-600">
                     <XCircle size={14} />
-                    <span>내 답: {getOptionText(d, d.selected)}</span>
+                    <span>내 답: 보기 {d.selected}</span>
                   </div>
                   <div className="flex items-center gap-2 text-green-600">
                     <CheckCircle size={14} />
-                    <span>정답: {d.correctOption || getOptionText(d, d.correct)}</span>
+                    <span>정답: {d.correctOption || `보기 ${d.correct}`}</span>
                   </div>
                   {d.reference && (
                     <div className="text-indigo-500 text-xs mt-1">
@@ -183,6 +200,58 @@ export default function QuizResultPage() {
         </Card>
       )}
 
+      {/* Name Input + Save */}
+      {!saved ? (
+        <Card className="p-4">
+          <h2 className="text-sm font-semibold text-slate-700 mb-3">기록 등록</h2>
+          <input
+            type="text"
+            value={playerName}
+            onChange={(e) => setPlayerName(e.target.value)}
+            placeholder="이름을 입력하세요"
+            maxLength={20}
+            className="w-full p-3 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 mb-3"
+          />
+          <p className="text-xs text-slate-400 mb-3">
+            등록된 학생 이름과 일치하면 달란트가 자동 지급됩니다.
+          </p>
+          <motion.button
+            whileTap={{ scale: 0.98 }}
+            onClick={handleSave}
+            disabled={saving || !playerName.trim()}
+            className="w-full py-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {saving ? '저장 중...' : '기록 등록'}
+          </motion.button>
+        </Card>
+      ) : (
+        <Card className="p-4 text-center">
+          <p className="text-green-600 font-bold mb-1">기록이 등록되었습니다!</p>
+          {savedResult?.talentAwarded && savedResult.earnedTalent > 0 ? (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2 }}
+            >
+              <p className="text-amber-600 font-bold text-lg">
+                +{savedResult.earnedTalent} 달란트 획득!
+              </p>
+              <p className="text-sm text-slate-500">
+                현재 잔액: <b className="text-slate-700">{savedResult.newBalance}</b> 달란트
+              </p>
+            </motion.div>
+          ) : savedResult?.studentMatched ? (
+            <p className="text-sm text-slate-500">
+              오늘 달란트 획득 횟수를 초과했어요.
+            </p>
+          ) : (
+            <p className="text-sm text-slate-500">
+              등록된 학생이 아니어서 달란트는 지급되지 않았어요.
+            </p>
+          )}
+        </Card>
+      )}
+
       {/* Actions */}
       <div className="flex gap-3">
         <motion.button
@@ -200,18 +269,14 @@ export default function QuizResultPage() {
           whileTap={{ scale: 0.98 }}
           onClick={() => {
             sessionStorage.removeItem('quizResult');
-            router.push('/dashboard');
+            router.push('/quiz');
           }}
           className="flex-1 py-3 rounded-xl bg-slate-100 text-slate-700 font-bold flex items-center justify-center gap-2 hover:bg-slate-200"
         >
-          <Home size={18} />
-          홈으로
+          <Trophy size={18} />
+          결과 목록
         </motion.button>
       </div>
     </div>
   );
-}
-
-function getOptionText(detail: QuizDetail, optionNum: number): string {
-  return `보기 ${optionNum}`;
 }

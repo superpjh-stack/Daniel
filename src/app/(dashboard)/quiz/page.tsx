@@ -7,16 +7,9 @@ import { motion } from 'framer-motion';
 import { Gamepad2, BookOpen, Cross, Users, Sparkles, Trophy, Clock, Settings, Lightbulb } from 'lucide-react';
 import { Card } from '@/components/ui';
 
-interface Student {
-  id: string;
-  name: string;
-  grade: number;
-  className: string | null;
-}
-
 interface RecentResult {
   id: string;
-  studentName: string;
+  playerName: string;
   score: number;
   totalCount: number;
   earnedTalent: number;
@@ -24,8 +17,7 @@ interface RecentResult {
 }
 
 interface RankingEntry {
-  studentId: string;
-  studentName: string;
+  playerName: string;
   totalGames: number;
   avgScore: number;
   bestScore: number;
@@ -50,27 +42,15 @@ const difficulties = [
 
 export default function QuizMainPage() {
   const router = useRouter();
-  const [students, setStudents] = useState<Student[]>([]);
-  const [selectedStudentId, setSelectedStudentId] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedDifficulty, setSelectedDifficulty] = useState('all');
   const [recentResults, setRecentResults] = useState<RecentResult[]>([]);
   const [ranking, setRanking] = useState<RankingEntry[]>([]);
   const [loading, setLoading] = useState(false);
-  const [remainingAttempts, setRemainingAttempts] = useState(3);
 
   useEffect(() => {
-    fetchStudents();
     fetchResults();
   }, []);
-
-  async function fetchStudents() {
-    const res = await fetch('/api/students');
-    if (res.ok) {
-      const data = await res.json();
-      setStudents(data);
-    }
-  }
 
   async function fetchResults() {
     const [recentRes, rankingRes] = await Promise.all([
@@ -88,17 +68,12 @@ export default function QuizMainPage() {
   }
 
   async function handleStart() {
-    if (!selectedStudentId) {
-      alert('학생을 선택해주세요.');
-      return;
-    }
     setLoading(true);
     try {
       const res = await fetch('/api/quiz/start', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          studentId: selectedStudentId,
           category: selectedCategory,
           difficulty: selectedDifficulty,
         }),
@@ -109,14 +84,9 @@ export default function QuizMainPage() {
         return;
       }
       const data = await res.json();
-      setRemainingAttempts(data.remainingAttempts);
 
-      // sessionStorage에 게임 데이터 저장
       sessionStorage.setItem('quizData', JSON.stringify({
         questions: data.questions,
-        studentId: selectedStudentId,
-        studentName: students.find(s => s.id === selectedStudentId)?.name || '',
-        canEarnTalent: data.canEarnTalent,
       }));
       router.push('/quiz/play');
     } finally {
@@ -145,28 +115,6 @@ export default function QuizMainPage() {
           <Settings size={22} />
         </Link>
       </div>
-
-      {/* 학생 선택 */}
-      <Card className="p-4">
-        <label className="block text-sm font-medium text-slate-700 mb-2">학생 선택</label>
-        <select
-          value={selectedStudentId}
-          onChange={(e) => setSelectedStudentId(e.target.value)}
-          className="w-full p-3 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200"
-        >
-          <option value="">-- 학생을 선택하세요 --</option>
-          {students.map((s) => (
-            <option key={s.id} value={s.id}>
-              {s.name} ({s.grade}학년{s.className ? `, ${s.className}` : ''})
-            </option>
-          ))}
-        </select>
-        {selectedStudentId && (
-          <p className="mt-2 text-sm text-slate-500">
-            오늘 남은 횟수: <b className="text-indigo-600">{remainingAttempts}</b>/3회
-          </p>
-        )}
-      </Card>
 
       {/* 카테고리 선택 */}
       <Card className="p-4">
@@ -216,7 +164,7 @@ export default function QuizMainPage() {
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
         onClick={handleStart}
-        disabled={loading || !selectedStudentId}
+        disabled={loading}
         className="w-full py-4 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl font-bold text-lg shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {loading ? '준비 중...' : '🎮 게임 시작!'}
@@ -233,7 +181,7 @@ export default function QuizMainPage() {
             {recentResults.map((r) => (
               <div key={r.id} className="flex items-center justify-between py-2 border-b border-slate-100 last:border-0 text-sm">
                 <div className="flex items-center gap-2">
-                  <span className="font-medium text-slate-700">{r.studentName}</span>
+                  <span className="font-medium text-slate-700">{r.playerName}</span>
                   <span className={`font-bold ${r.score >= 7 ? 'text-green-600' : r.score >= 4 ? 'text-yellow-600' : 'text-red-600'}`}>
                     {r.score}/{r.totalCount}
                   </span>
@@ -257,10 +205,10 @@ export default function QuizMainPage() {
           </h2>
           <div className="space-y-2">
             {ranking.map((r, i) => (
-              <div key={r.studentId} className="flex items-center justify-between py-2 border-b border-slate-100 last:border-0 text-sm">
+              <div key={r.playerName} className="flex items-center justify-between py-2 border-b border-slate-100 last:border-0 text-sm">
                 <div className="flex items-center gap-2">
                   <span className="w-6 text-center">{i < 3 ? medalIcons[i] : `${i + 1}`}</span>
-                  <span className="font-medium text-slate-700">{r.studentName}</span>
+                  <span className="font-medium text-slate-700">{r.playerName}</span>
                 </div>
                 <div className="flex items-center gap-3 text-slate-500">
                   <span>평균 <b className="text-indigo-600">{r.avgScore}</b></span>

@@ -1264,13 +1264,11 @@ export interface QuizQuestion {
 
 export interface QuizResult {
   id: string;
-  studentId: string;
+  playerName: string;
   score: number;
   totalCount: number;
   earnedTalent: number;
-  answers: string;
   createdAt: string;
-  studentName?: string;
 }
 
 export async function getAllQuizQuestions(
@@ -1383,32 +1381,55 @@ export async function getRandomQuizQuestions(
   }));
 }
 
-export async function getStudentTodayQuizCount(studentId: string): Promise<number> {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const tomorrow = new Date(today);
-  tomorrow.setDate(tomorrow.getDate() + 1);
-
-  return prisma.quizResult.count({
-    where: {
-      studentId,
-      createdAt: { gte: today, lt: tomorrow },
-    },
-  });
-}
-
-export async function submitQuizAndAwardTalent(
-  studentId: string,
+export async function scoreQuizAnswers(
   answers: { questionId: string; selected: number }[]
 ): Promise<{
   score: number;
   totalCount: number;
-  earnedTalent: number;
-  talentAwarded: boolean;
-  newBalance: number;
   details: { questionId: string; question: string; selected: number; correct: number; isCorrect: boolean; reference: string | null; correctOption?: string }[];
 }> {
+  const questionIds = answers.map(a => a.questionId);
+  const questions = await prisma.quizQuestion.findMany({
+    where: { id: { in: questionIds } },
+  });
+  const questionMap = new Map(questions.map(q => [q.id, q]));
+
+  let score = 0;
+  const details = answers.map(a => {
+    const q = questionMap.get(a.questionId);
+    if (!q) return { questionId: a.questionId, question: '?', selected: a.selected, correct: 0, isCorrect: false, reference: null };
+    const isCorrect = a.selected === q.answer;
+    if (isCorrect) score++;
+    const optionKey = `option${q.answer}` as 'option1' | 'option2' | 'option3' | 'option4';
+    return {
+      questionId: a.questionId,
+      question: q.question,
+      selected: a.selected,
+      correct: q.answer,
+      isCorrect,
+      reference: q.reference,
+      ...(!isCorrect && { correctOption: q[optionKey] }),
+    };
+  });
+
+  return { score, totalCount: answers.length, details };
+}
+
+export async function saveQuizResult(
+  playerName: string,
+  answers: { questionId: string; selected: number }[]
+): Promise<{
+  success: boolean;
+  score: number;
+  totalCount: number;
+  earnedTalent: number;
+  talentAwarded: boolean;
+  studentMatched: boolean;
+  newBalance: number;
+  playerName: string;
+}> {
   return prisma.$transaction(async (tx) => {
+    // 1. Score the answers
     const questionIds = answers.map(a => a.questionId);
     const questions = await tx.quizQuestion.findMany({
       where: { id: { in: questionIds } },
@@ -1418,40 +1439,59 @@ export async function submitQuizAndAwardTalent(
     let score = 0;
     const details = answers.map(a => {
       const q = questionMap.get(a.questionId);
-      if (!q) return { questionId: a.questionId, question: '?', selected: a.selected, correct: 0, isCorrect: false, reference: null };
+      if (!q) return { questionId: a.questionId, selected: a.selected, correct: 0, isCorrect: false };
       const isCorrect = a.selected === q.answer;
       if (isCorrect) score++;
-      const optionKey = `option${q.answer}` as 'option1' | 'option2' | 'option3' | 'option4';
-      return {
-        questionId: a.questionId,
-        question: q.question,
-        selected: a.selected,
-        correct: q.answer,
-        isCorrect,
-        reference: q.reference,
-        ...(!isCorrect && { correctOption: q[optionKey] }),
-      };
+      return { questionId: a.questionId, selected: a.selected, correct: q.answer, isCorrect };
     });
 
     const totalCount = answers.length;
+
+    // 2. Calculate talent
     let earnedTalent = 0;
     if (score === 10) earnedTalent = 10;
     else if (score >= 7) earnedTalent = 7;
     else if (score >= 4) earnedTalent = 4;
     else if (score >= 1) earnedTalent = 1;
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const todayCount = await tx.quizResult.count({
-      where: { studentId, createdAt: { gte: today, lt: tomorrow } },
-    });
-    const talentAwarded = todayCount < 3 && earnedTalent > 0;
+    // 3. Try to match student by exact name (unique match only)
+    let studentId: string | null = null;
+    let studentMatched = false;
+    let talentAwarded = false;
+    let newBalance = 0;
+
+    if (earnedTalent > 0) {
+      const matchingStudents = await tx.student.findMany({
+        where: { name: playerName },
+        select: { id: true, talentBalance: true },
+      });
+
+      if (matchingStudents.length === 1) {
+        const student = matchingStudents[0];
+        studentId = student.id;
+        studentMatched = true;
+
+        // Check daily limit (3 per day)
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const todayCount = await tx.quizResult.count({
+          where: { studentId: student.id, createdAt: { gte: today, lt: tomorrow } },
+        });
+
+        if (todayCount < 3) {
+          talentAwarded = true;
+        }
+      }
+    }
+
     const actualTalent = talentAwarded ? earnedTalent : 0;
 
+    // 4. Create QuizResult
     await tx.quizResult.create({
       data: {
+        playerName,
         studentId,
         score,
         totalCount,
@@ -1460,8 +1500,8 @@ export async function submitQuizAndAwardTalent(
       },
     });
 
-    let newBalance = 0;
-    if (talentAwarded) {
+    // 5. Award talent if matched
+    if (talentAwarded && studentId) {
       await tx.talent.create({
         data: {
           studentId,
@@ -1470,84 +1510,63 @@ export async function submitQuizAndAwardTalent(
           type: 'quiz',
         },
       });
-      const student = await tx.student.update({
+      const updated = await tx.student.update({
         where: { id: studentId },
         data: { talentBalance: { increment: actualTalent } },
       });
-      newBalance = student.talentBalance;
-    } else {
-      const student = await tx.student.findUnique({ where: { id: studentId } });
-      newBalance = student?.talentBalance ?? 0;
+      newBalance = updated.talentBalance;
     }
 
-    return { score, totalCount, earnedTalent: actualTalent, talentAwarded, newBalance, details };
+    return { success: true, score, totalCount, earnedTalent: actualTalent, talentAwarded, studentMatched, newBalance, playerName };
   });
 }
 
 export async function getQuizResults(
-  studentId?: string,
-  classId?: string,
   limit: number = 10
 ): Promise<QuizResult[]> {
-  const where: Record<string, unknown> = {};
-  if (studentId) where.studentId = studentId;
-  if (classId && classId !== 'all') where.student = { classId };
-
   const results = await prisma.quizResult.findMany({
-    where,
-    include: { student: { select: { name: true } } },
     orderBy: { createdAt: 'desc' },
     take: limit,
+    select: {
+      id: true,
+      playerName: true,
+      score: true,
+      totalCount: true,
+      earnedTalent: true,
+      createdAt: true,
+    },
   });
 
   return results.map(r => ({
     id: r.id,
-    studentId: r.studentId,
+    playerName: r.playerName,
     score: r.score,
     totalCount: r.totalCount,
     earnedTalent: r.earnedTalent,
-    answers: r.answers,
     createdAt: r.createdAt.toISOString(),
-    studentName: r.student.name,
   }));
 }
 
 export async function getQuizRanking(
-  classId?: string,
   limit: number = 10
-): Promise<{ studentId: string; studentName: string; totalGames: number; avgScore: number; bestScore: number; totalTalentEarned: number }[]> {
-  const where: Record<string, unknown> = {};
-  if (classId && classId !== 'all') where.student = { classId };
-
+): Promise<{ playerName: string; totalGames: number; avgScore: number; bestScore: number; totalTalentEarned: number }[]> {
   const results = await prisma.quizResult.groupBy({
-    by: ['studentId'],
+    by: ['playerName'],
     _count: { id: true },
     _avg: { score: true },
     _max: { score: true },
     _sum: { earnedTalent: true },
   });
 
-  const studentIds = results.map(r => r.studentId);
-  const students = await prisma.student.findMany({
-    where: {
-      id: { in: studentIds },
-      ...(classId && classId !== 'all' ? { classId } : {}),
-    },
-    select: { id: true, name: true },
-  });
-  const nameMap = new Map(students.map(s => [s.id, s.name]));
-
   return results
-    .filter(r => nameMap.has(r.studentId))
     .map(r => ({
-      studentId: r.studentId,
-      studentName: nameMap.get(r.studentId) || '알 수 없음',
+      playerName: r.playerName,
       totalGames: r._count.id,
       avgScore: Math.round((r._avg.score || 0) * 10) / 10,
       bestScore: r._max.score || 0,
       totalTalentEarned: r._sum.earnedTalent || 0,
     }))
-    .sort((a, b) => b.avgScore - a.avgScore)
+    .sort((a, b) => b.avgScore - a.avgScore || b.bestScore - a.bestScore)
     .slice(0, limit);
 }
 

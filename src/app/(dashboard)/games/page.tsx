@@ -29,6 +29,14 @@ const games = [
     href: '/games/davids-sling',
     available: true,
   },
+  {
+    id: 'five-loaves',
+    title: '오병이어의 기적',
+    description: '군중에게 빵과 물고기를 나눠주며 기적을 체험하세요!',
+    emoji: '\u{1F35E}',
+    href: '/games/five-loaves',
+    available: true,
+  },
 ];
 
 export default function GamesPage() {

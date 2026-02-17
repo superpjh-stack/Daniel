@@ -18,6 +18,57 @@ interface PreviewFile {
   preview: string;
 }
 
+async function uploadViaPresigned(
+  originalBlob: Blob,
+  thumbBlob: Blob,
+  fileName: string
+): Promise<{ imageUrl: string; thumbnailUrl: string }> {
+  const urlRes = await fetch('/api/gallery/upload', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ fileName, fileType: 'image/jpeg' }),
+  });
+
+  if (!urlRes.ok) throw new Error('Failed to get upload URL');
+  const { uploadUrl, thumbUploadUrl, imageUrl, thumbnailUrl } = await urlRes.json();
+
+  const [imgRes, thumbRes] = await Promise.all([
+    fetch(uploadUrl, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'image/jpeg' },
+      body: originalBlob,
+    }),
+    fetch(thumbUploadUrl, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'image/jpeg' },
+      body: thumbBlob,
+    }),
+  ]);
+
+  if (!imgRes.ok || !thumbRes.ok) {
+    throw new Error('S3 direct upload failed');
+  }
+
+  return { imageUrl, thumbnailUrl };
+}
+
+async function uploadViaProxy(
+  originalBlob: Blob,
+  thumbBlob: Blob,
+): Promise<{ imageUrl: string; thumbnailUrl: string }> {
+  const formData = new FormData();
+  formData.append('image', originalBlob, 'image.jpg');
+  formData.append('thumbnail', thumbBlob, 'thumb.jpg');
+
+  const res = await fetch('/api/gallery/upload', {
+    method: 'POST',
+    body: formData,
+  });
+
+  if (!res.ok) throw new Error('Server upload failed');
+  return await res.json();
+}
+
 export default function PhotoUploadForm() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -82,38 +133,20 @@ export default function PhotoUploadForm() {
           resizeImage(file, 400),
         ]);
 
-        // 2. Get presigned URLs
-        const urlRes = await fetch('/api/gallery/upload', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            fileName: file.name,
-            fileType: 'image/jpeg',
-          }),
-        });
+        // 2. Upload: try presigned URL first, fallback to server proxy
+        let result: { imageUrl: string; thumbnailUrl: string };
+        try {
+          result = await uploadViaPresigned(originalBlob, thumbBlob, file.name);
+        } catch {
+          // S3 direct upload failed (CORS or checksum issue) — use server proxy
+          result = await uploadViaProxy(originalBlob, thumbBlob);
+        }
 
-        if (!urlRes.ok) throw new Error('Failed to get upload URL');
-        const { uploadUrl, thumbUploadUrl, imageUrl, thumbnailUrl } = await urlRes.json();
-
-        // 3. Upload to S3
-        await Promise.all([
-          fetch(uploadUrl, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'image/jpeg' },
-            body: originalBlob,
-          }),
-          fetch(thumbUploadUrl, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'image/jpeg' },
-            body: thumbBlob,
-          }),
-        ]);
-
-        photos.push({ imageUrl, thumbnailUrl, sortOrder: i });
+        photos.push({ ...result, sortOrder: i });
         setProgress(Math.round(((i + 1) / totalSteps) * 90));
       }
 
-      // 4. Create post
+      // 3. Create post
       const postRes = await fetch('/api/gallery', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

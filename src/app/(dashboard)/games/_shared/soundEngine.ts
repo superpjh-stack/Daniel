@@ -308,6 +308,70 @@ class GameSoundEngine {
   playFaithDeactivate() {
     this.sweep(800, 300, 0.2, 'sine', 0.08);
   }
+
+  // === Five Loaves & Two Fish ===
+
+  playServeSuccess(isChild: boolean) {
+    const ctx = this.getCtx();
+    if (!ctx || this.muted) return;
+    const t = ctx.currentTime;
+    if (isChild) {
+      // Higher double ding for child
+      this.tone(659, 0.06, 'triangle', 0.12, t);
+      this.tone(784, 0.06, 'triangle', 0.12, t + 0.06);
+    } else {
+      // Short ding (C5)
+      this.tone(523, 0.08, 'triangle', 0.12, t);
+    }
+  }
+
+  playCrowdTimeout() {
+    const ctx = this.getCtx();
+    if (!ctx || this.muted) return;
+    const t = ctx.currentTime;
+    this.tone(200, 0.1, 'sawtooth', 0.08, t);
+    this.tone(200, 0.1, 'sawtooth', 0.08, t + 0.12);
+  }
+
+  playMiracleActivate() {
+    const ctx = this.getCtx();
+    if (!ctx || this.muted) return;
+    const t = ctx.currentTime;
+    // Mystical ascending sweep + chime
+    this.sweep(400, 1200, 0.4, 'sine', 0.12, t);
+    this.tone(1200, 0.15, 'triangle', 0.1, t + 0.3);
+    this.tone(1568, 0.2, 'triangle', 0.08, t + 0.4);
+  }
+
+  playMiracleDeactivate() {
+    this.sweep(800, 300, 0.25, 'sine', 0.08);
+  }
+
+  playBasketMultiply() {
+    const ctx = this.getCtx();
+    if (!ctx || this.muted) return;
+    const t = ctx.currentTime;
+    // Quick ascending arpeggio (C5 E5 G5)
+    this.tone(523, 0.04, 'triangle', 0.06, t);
+    this.tone(659, 0.04, 'triangle', 0.06, t + 0.04);
+    this.tone(784, 0.04, 'triangle', 0.06, t + 0.08);
+  }
+
+  playUpgradeBuy() {
+    const ctx = this.getCtx();
+    if (!ctx || this.muted) return;
+    const t = ctx.currentTime;
+    // Level up fanfare (C5→E5→G5→C6)
+    this.tone(523, 0.08, 'square', 0.1, t);
+    this.tone(659, 0.08, 'square', 0.1, t + 0.08);
+    this.tone(784, 0.08, 'square', 0.1, t + 0.16);
+    this.tone(1047, 0.15, 'square', 0.12, t + 0.24);
+  }
+
+  playCombo(count: number) {
+    const freq = 400 + count * 50;
+    this.tone(freq, 0.04, 'triangle', 0.08);
+  }
 }
 
 export const soundEngine = typeof window !== 'undefined' ? new GameSoundEngine() : (new Proxy({} as GameSoundEngine, {

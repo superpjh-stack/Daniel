@@ -176,10 +176,11 @@ model QuizResult {
   totalCount   Int      @default(10)
   earnedTalent Int      // 획득 달란트
   answers      String   // JSON: [{ questionId, selected, correct, isCorrect }]
+  playerName   String   // 플레이어 이름
   createdAt    DateTime @default(now())
 
-  student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  studentId String
+  student   Student? @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  studentId String?
 }
 
 // 설정

@@ -20,9 +20,6 @@ interface QuizPlayQuestion {
 
 interface QuizData {
   questions: QuizPlayQuestion[];
-  studentId: string;
-  studentName: string;
-  canEarnTalent: boolean;
 }
 
 const categoryLabels: Record<string, { label: string; icon: React.ReactNode }> = {
@@ -74,7 +71,7 @@ export default function QuizPlayPage() {
     );
   }
 
-  const { questions, studentId, studentName } = quizData;
+  const { questions } = quizData;
   const totalCount = questions.length;
   const currentQuestion = questions[currentIndex];
   const currentSelected = selectedAnswers.get(currentQuestion.id);
@@ -116,19 +113,19 @@ export default function QuizPlayPage() {
       const res = await fetch('/api/quiz/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ studentId, answers }),
+        body: JSON.stringify({ answers }),
       });
 
       if (!res.ok) {
         const err = await res.json();
-        alert(err.error || '제출에 실패했습니다.');
+        alert(err.error || '채점에 실패했습니다.');
         return;
       }
 
       const result = await res.json();
       sessionStorage.setItem('quizResult', JSON.stringify({
         ...result,
-        studentName,
+        answers,
       }));
       sessionStorage.removeItem('quizData');
       router.push('/quiz/result');
@@ -149,7 +146,6 @@ export default function QuizPlayPage() {
           <span className="ml-1 text-lg font-bold text-indigo-600">{currentIndex + 1}</span>
           <span className="text-sm text-slate-500"> / {totalCount}</span>
         </div>
-        <div className="text-sm font-medium text-slate-600">{studentName}</div>
       </div>
 
       {/* Progress Bar */}
