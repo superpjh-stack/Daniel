@@ -26,8 +26,8 @@ export default async function GalleryUploadPage() {
           <Camera className="text-white" size={22} />
         </div>
         <div>
-          <h1 className="text-xl font-bold text-slate-800">사진 업로드</h1>
-          <p className="text-sm text-slate-500">활동 사진을 공유해주세요</p>
+          <h1 className="text-xl font-bold text-slate-800">미디어 업로드</h1>
+          <p className="text-sm text-slate-500">사진과 동영상을 공유해주세요</p>
         </div>
       </div>
 

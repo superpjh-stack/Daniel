@@ -1923,11 +1923,23 @@ export async function deleteHeroMedia(id: string): Promise<void> {
 
 // ─── PhotoPost 인터페이스 ───
 
+export interface MediaItem {
+  id: string;
+  type: string;
+  imageUrl: string | null;
+  thumbnailUrl: string | null;
+  videoUrl: string | null;
+  videoLink: string | null;
+  embedUrl: string | null;
+  sortOrder: number;
+}
+
 export interface PhotoPostSummary {
   id: string;
   title: string;
   category: string;
   thumbnailUrl: string;
+  mediaType: string;
   photoCount: number;
   commentCount: number;
   authorName: string;
@@ -1942,12 +1954,7 @@ export interface PhotoPostDetail {
   authorId: string;
   authorName: string;
   createdAt: string;
-  photos: {
-    id: string;
-    imageUrl: string;
-    thumbnailUrl: string;
-    sortOrder: number;
-  }[];
+  photos: MediaItem[];
   comments: {
     id: string;
     content: string;
@@ -1973,7 +1980,7 @@ export async function getPhotoPosts(
       where,
       include: {
         author: { select: { name: true } },
-        photos: { orderBy: { sortOrder: 'asc' }, take: 1, select: { thumbnailUrl: true } },
+        photos: { orderBy: { sortOrder: 'asc' }, take: 1, select: { thumbnailUrl: true, imageUrl: true, type: true } },
         _count: { select: { photos: true, comments: true } },
       },
       orderBy: { createdAt: 'desc' },
@@ -1983,16 +1990,20 @@ export async function getPhotoPosts(
   ]);
 
   return {
-    posts: posts.map(p => ({
-      id: p.id,
-      title: p.title,
-      category: p.category,
-      thumbnailUrl: p.photos[0]?.thumbnailUrl || '',
-      photoCount: p._count.photos,
-      commentCount: p._count.comments,
-      authorName: p.author.name,
-      createdAt: p.createdAt.toISOString(),
-    })),
+    posts: posts.map(p => {
+      const firstPhoto = p.photos[0];
+      return {
+        id: p.id,
+        title: p.title,
+        category: p.category,
+        thumbnailUrl: firstPhoto?.thumbnailUrl || firstPhoto?.imageUrl || '',
+        mediaType: firstPhoto?.type || 'image',
+        photoCount: p._count.photos,
+        commentCount: p._count.comments,
+        authorName: p.author.name,
+        createdAt: p.createdAt.toISOString(),
+      };
+    }),
     total,
   };
 }
@@ -2020,8 +2031,12 @@ export async function getPhotoPostById(id: string): Promise<PhotoPostDetail | un
     createdAt: p.createdAt.toISOString(),
     photos: p.photos.map(ph => ({
       id: ph.id,
-      imageUrl: ph.imageUrl,
-      thumbnailUrl: ph.thumbnailUrl,
+      type: ph.type,
+      imageUrl: ph.imageUrl ?? null,
+      thumbnailUrl: ph.thumbnailUrl ?? null,
+      videoUrl: ph.videoUrl ?? null,
+      videoLink: ph.videoLink ?? null,
+      embedUrl: ph.embedUrl ?? null,
       sortOrder: ph.sortOrder,
     })),
     comments: p.comments.map(c => ({
@@ -2039,7 +2054,15 @@ export async function createPhotoPost(data: {
   description?: string;
   category: string;
   authorId: string;
-  photos: { imageUrl: string; thumbnailUrl: string; sortOrder: number }[];
+  media: {
+    type?: string;
+    imageUrl?: string;
+    thumbnailUrl?: string;
+    videoUrl?: string;
+    videoLink?: string;
+    embedUrl?: string;
+    sortOrder: number;
+  }[];
 }): Promise<string> {
   const post = await prisma.photoPost.create({
     data: {
@@ -2048,10 +2071,14 @@ export async function createPhotoPost(data: {
       category: data.category,
       authorId: data.authorId,
       photos: {
-        create: data.photos.map(ph => ({
-          imageUrl: ph.imageUrl,
-          thumbnailUrl: ph.thumbnailUrl,
-          sortOrder: ph.sortOrder,
+        create: data.media.map(m => ({
+          type: m.type || 'image',
+          imageUrl: m.imageUrl ?? null,
+          thumbnailUrl: m.thumbnailUrl ?? null,
+          videoUrl: m.videoUrl ?? null,
+          videoLink: m.videoLink ?? null,
+          embedUrl: m.embedUrl ?? null,
+          sortOrder: m.sortOrder,
         })),
       },
     },

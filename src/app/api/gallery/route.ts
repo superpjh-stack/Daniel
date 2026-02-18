@@ -38,11 +38,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { title, description, category, photos } = await request.json();
+    const { title, description, category, photos, media } = await request.json();
+    const mediaItems = media || photos;
 
-    if (!title || !photos || photos.length === 0) {
+    if (!title || !mediaItems || mediaItems.length === 0) {
       return NextResponse.json(
-        { error: '제목과 사진은 필수입니다.' },
+        { error: '제목과 미디어는 필수입니다.' },
         { status: 400 }
       );
     }
@@ -52,7 +53,7 @@ export async function POST(request: NextRequest) {
       description,
       category: category || 'daily',
       authorId: session.id,
-      photos,
+      media: mediaItems,
     });
 
     return NextResponse.json({ id, title });

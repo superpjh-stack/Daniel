@@ -29,7 +29,8 @@ export async function generateMetadata({
     return { title: '사진첩 - 다니엘' };
   }
 
-  const imageUrl = post.photos[0]?.imageUrl || post.photos[0]?.thumbnailUrl || '';
+  const firstMedia = post.photos[0];
+  const imageUrl = firstMedia?.thumbnailUrl || firstMedia?.imageUrl || '';
   const description = post.description || `동은교회 초등부 사진첩 - ${post.title}`;
 
   return {

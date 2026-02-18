@@ -3,13 +3,14 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Camera, Plus, Loader2, MessageCircle, ImageIcon } from 'lucide-react';
+import { Camera, Plus, Loader2, MessageCircle, ImageIcon, Play } from 'lucide-react';
 
 interface PhotoPostSummary {
   id: string;
   title: string;
   category: string;
   thumbnailUrl: string;
+  mediaType: string;
   photoCount: number;
   commentCount: number;
   authorName: string;
@@ -175,7 +176,20 @@ export default function GalleryPage() {
                           <ImageIcon size={40} className="text-slate-300" />
                         </div>
                       )}
-                      {post.photoCount > 1 && (
+                      {/* 동영상 재생 오버레이 */}
+                      {(post.mediaType === 'video' || post.mediaType === 'video_link') && (
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                          <div className="w-11 h-11 rounded-full bg-black/50 flex items-center justify-center">
+                            <Play className="text-white ml-0.5" size={20} fill="white" />
+                          </div>
+                        </div>
+                      )}
+                      {post.mediaType === 'video_link' && (
+                        <div className="absolute top-2 right-2 bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded font-bold">
+                          YT
+                        </div>
+                      )}
+                      {post.mediaType !== 'video_link' && post.photoCount > 1 && (
                         <div className="absolute top-2 right-2 bg-black/50 text-white text-xs px-1.5 py-0.5 rounded">
                           +{post.photoCount}
                         </div>

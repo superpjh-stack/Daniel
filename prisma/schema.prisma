@@ -224,13 +224,17 @@ model PhotoPost {
   comments  PhotoComment[]
 }
 
-// 개별 사진
+// 개별 미디어 (사진/동영상/동영상링크)
 model Photo {
-  id           String   @id @default(cuid())
-  imageUrl     String
-  thumbnailUrl String
-  sortOrder    Int      @default(0)
-  createdAt    DateTime @default(now())
+  id           String    @id @default(cuid())
+  type         String    @default("image")  // "image" | "video" | "video_link"
+  imageUrl     String?   // S3 이미지 원본 URL (type=image)
+  thumbnailUrl String?   // 썸네일 URL (image/video: S3, video_link: YouTube thumb)
+  videoUrl     String?   // S3 동영상 파일 URL (type=video)
+  videoLink    String?   // 외부 동영상 원본 URL (type=video_link)
+  embedUrl     String?   // iframe embed URL (type=video_link)
+  sortOrder    Int       @default(0)
+  createdAt    DateTime  @default(now())
 
   post    PhotoPost @relation(fields: [postId], references: [id], onDelete: Cascade)
   postId  String

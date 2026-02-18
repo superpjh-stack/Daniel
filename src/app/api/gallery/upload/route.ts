@@ -23,15 +23,25 @@ export async function POST(request: NextRequest) {
       const formData = await request.formData();
       const imageFile = formData.get('image') as File | null;
       const thumbFile = formData.get('thumbnail') as File | null;
-
-      if (!imageFile) {
-        return NextResponse.json({ error: 'image file is required' }, { status: 400 });
-      }
+      const videoFile = formData.get('video') as File | null;
 
       const now = new Date();
       const year = now.getFullYear();
       const month = String(now.getMonth() + 1).padStart(2, '0');
       const uniqueId = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
+
+      // 동영상 파일 프록시 업로드
+      if (videoFile) {
+        const ext = videoFile.name.split('.').pop() || 'mp4';
+        const videoKey = `videos/${year}/${month}/${uniqueId}.${ext}`;
+        const videoBuffer = Buffer.from(await videoFile.arrayBuffer());
+        await uploadToS3(videoKey, videoBuffer, videoFile.type || 'video/mp4');
+        return NextResponse.json({ videoUrl: getPublicUrl(videoKey) });
+      }
+
+      if (!imageFile) {
+        return NextResponse.json({ error: 'image or video file is required' }, { status: 400 });
+      }
 
       const imageKey = `photos/${year}/${month}/${uniqueId}.jpg`;
       const thumbKey = `photos/${year}/${month}/${uniqueId}_thumb.jpg`;
@@ -64,6 +74,19 @@ export async function POST(request: NextRequest) {
     const year = now.getFullYear();
     const month = String(now.getMonth() + 1).padStart(2, '0');
     const uniqueId = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
+
+    const isVideo = fileType.startsWith('video/');
+
+    if (isVideo) {
+      const ext = fileName.split('.').pop() || 'mp4';
+      const videoKey = `videos/${year}/${month}/${uniqueId}.${ext}`;
+      const uploadUrl = await getPresignedUploadUrl(videoKey, fileType);
+      return NextResponse.json({
+        uploadUrl,
+        videoUrl: getPublicUrl(videoKey),
+        key: videoKey,
+      });
+    }
 
     const imageKey = `photos/${year}/${month}/${uniqueId}.jpg`;
     const thumbKey = `photos/${year}/${month}/${uniqueId}_thumb.jpg`;

@@ -5,13 +5,57 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface Photo {
   id: string;
-  imageUrl: string;
-  thumbnailUrl: string;
+  type?: string;
+  imageUrl?: string | null;
+  thumbnailUrl?: string | null;
+  videoUrl?: string | null;
+  videoLink?: string | null;
+  embedUrl?: string | null;
   sortOrder: number;
 }
 
 interface PhotoViewerProps {
   photos: Photo[];
+}
+
+function MediaContent({ item, index }: { item: Photo; index: number }) {
+  const type = item.type || 'image';
+
+  if (type === 'video') {
+    return (
+      <video
+        key={item.id}
+        controls
+        className="w-full h-full object-contain"
+        preload="metadata"
+      >
+        <source src={item.videoUrl!} />
+        브라우저가 동영상을 지원하지 않습니다.
+      </video>
+    );
+  }
+
+  if (type === 'video_link') {
+    return (
+      <iframe
+        key={item.id}
+        src={item.embedUrl!}
+        className="w-full h-full"
+        allowFullScreen
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        sandbox="allow-scripts allow-same-origin allow-presentation allow-popups"
+        title={`동영상 ${index + 1}`}
+      />
+    );
+  }
+
+  return (
+    <img
+      src={item.imageUrl!}
+      alt={`Photo ${index + 1}`}
+      className="w-full h-full object-contain"
+    />
+  );
 }
 
 export default function PhotoViewer({ photos }: PhotoViewerProps) {
@@ -44,21 +88,22 @@ export default function PhotoViewer({ photos }: PhotoViewerProps) {
 
   if (photos.length === 0) return null;
 
+  const currentItem = photos[currentIndex];
+  const currentType = currentItem.type || 'image';
+  const isImageType = currentType === 'image';
+
   return (
     <>
       <div className="relative bg-slate-900 rounded-xl overflow-hidden">
-        {/* Main Image */}
+        {/* Main Media */}
         <div
-          className="relative aspect-[4/3] cursor-pointer"
+          className="relative aspect-[4/3]"
+          style={{ cursor: isImageType ? 'pointer' : 'default' }}
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
-          onClick={() => setFullscreen(true)}
+          onClick={() => { if (isImageType) setFullscreen(true); }}
         >
-          <img
-            src={photos[currentIndex].imageUrl}
-            alt={`Photo ${currentIndex + 1}`}
-            className="w-full h-full object-contain"
-          />
+          <MediaContent item={currentItem} index={currentIndex} />
         </div>
 
         {/* Navigation Arrows */}
@@ -86,12 +131,12 @@ export default function PhotoViewer({ photos }: PhotoViewerProps) {
         {/* Dots */}
         {photos.length > 1 && (
           <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
-            {photos.map((_, i) => (
+            {photos.map((p, i) => (
               <button
                 key={i}
                 onClick={(e) => { e.stopPropagation(); goTo(i); }}
-                className={`w-2 h-2 rounded-full transition-all ${
-                  i === currentIndex ? 'bg-white w-4' : 'bg-white/50'
+                className={`h-2 rounded-full transition-all ${
+                  i === currentIndex ? 'bg-white w-4' : 'bg-white/50 w-2'
                 }`}
               />
             ))}
@@ -106,8 +151,8 @@ export default function PhotoViewer({ photos }: PhotoViewerProps) {
         )}
       </div>
 
-      {/* Fullscreen Modal */}
-      {fullscreen && (
+      {/* Fullscreen Modal (이미지 타입만) */}
+      {fullscreen && isImageType && (
         <div
           className="fixed inset-0 z-50 bg-black flex items-center justify-center"
           onClick={() => setFullscreen(false)}
@@ -119,7 +164,7 @@ export default function PhotoViewer({ photos }: PhotoViewerProps) {
             &times;
           </button>
           <img
-            src={photos[currentIndex].imageUrl}
+            src={currentItem.imageUrl!}
             alt={`Photo ${currentIndex + 1}`}
             className="max-w-full max-h-full object-contain"
           />
