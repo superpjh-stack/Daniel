@@ -123,6 +123,7 @@ export default function LoginPage() {
             <div className="text-xs text-purple-600 space-y-1">
               <p><span className="font-medium">관리자:</span> admin / admin123</p>
               <p><span className="font-medium">교사:</span> teacher / teacher123</p>
+              <p><span className="font-medium">학부모:</span> parent / parent123</p>
             </div>
           </div>
         </div>
