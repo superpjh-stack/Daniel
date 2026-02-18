@@ -36,14 +36,23 @@ Write-Host "ECR 리포지토리: $EcrRepo" -ForegroundColor Green
 Write-Host "`nECR 로그인 중..." -ForegroundColor Yellow
 aws ecr get-login-password --region $Region | docker login --username AWS --password-stdin $ecrUri
 
-# 4. Docker 이미지 빌드 및 푸시
+# 4. Next.js 프로덕션 빌드
+Write-Host "`nNext.js 빌드 중..." -ForegroundColor Yellow
+npm run build
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "Next.js 빌드 실패!" -ForegroundColor Red
+    exit 1
+}
+Write-Host "Next.js 빌드 완료" -ForegroundColor Green
+
+# 5. Docker 이미지 빌드 및 푸시
 Write-Host "`nDocker 이미지 빌드 중..." -ForegroundColor Yellow
 docker build -t $EcrRepo .
 docker tag "$EcrRepo`:latest" $imageUri
 docker push $imageUri
 Write-Host "이미지 푸시 완료: $imageUri" -ForegroundColor Green
 
-# 5. App Runner 서비스 확인/생성
+# 6. App Runner 서비스 확인/생성
 Write-Host "`nApp Runner 배포 중..." -ForegroundColor Yellow
 $serviceExists = aws apprunner list-services --region $Region --query "ServiceSummaryList[?ServiceName=='$AppName'].ServiceArn" --output text 2>$null
 
