@@ -2,7 +2,7 @@
 # 사용법: .\deploy-aws.ps1
 
 param(
-    [string]$Region = "ap-northeast-2",
+    [string]$Region = "ap-northeast-1",
     [string]$AppName = "daniel-church-app",
     [string]$EcrRepo = "daniel-church-app"
 )
