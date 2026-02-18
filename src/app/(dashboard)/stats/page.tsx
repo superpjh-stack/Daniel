@@ -54,6 +54,7 @@ export default function StatsPage() {
   }, [period]);
 
   const fetchStats = async () => {
+    setLoading(true);
     try {
       const res = await fetch(`/api/stats?period=${period}`);
       if (res.ok) {
@@ -105,11 +106,13 @@ export default function StatsPage() {
       </div>
 
       <div className="space-y-6">
-        {/* 주간 출석 차트 */}
+        {/* 주간/월별 출석 차트 */}
         <Card>
           <div className="flex items-center gap-2 mb-6">
             <BarChart3 size={20} className="text-purple-500" />
-            <h2 className="font-bold text-gray-800">주간 출석 현황</h2>
+            <h2 className="font-bold text-gray-800">
+              {period === 'year' ? '월별 출석 현황' : '주간 출석 현황'}
+            </h2>
           </div>
 
           <div className="space-y-4">
@@ -121,7 +124,7 @@ export default function StatsPage() {
 
               return (
                 <motion.div
-                  key={week.week}
+                  key={`${period}-${week.week}`}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.1 }}
@@ -130,18 +133,21 @@ export default function StatsPage() {
                   <span className="w-24 text-sm text-gray-500">{week.week}</span>
                   <div className="flex-1 h-8 bg-gray-100 rounded-full overflow-hidden flex">
                     <motion.div
+                      key={`${period}-present-${week.week}`}
                       initial={{ width: 0 }}
                       animate={{ width: `${presentPercent}%` }}
                       transition={{ duration: 0.5, delay: index * 0.1 }}
                       className="bg-gradient-to-r from-emerald-400 to-emerald-500"
                     />
                     <motion.div
+                      key={`${period}-late-${week.week}`}
                       initial={{ width: 0 }}
                       animate={{ width: `${latePercent}%` }}
                       transition={{ duration: 0.5, delay: index * 0.1 }}
                       className="bg-gradient-to-r from-amber-400 to-amber-500"
                     />
                     <motion.div
+                      key={`${period}-absent-${week.week}`}
                       initial={{ width: 0 }}
                       animate={{ width: `${absentPercent}%` }}
                       transition={{ duration: 0.5, delay: index * 0.1 }}
