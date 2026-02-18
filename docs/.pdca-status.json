@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-02-16T23:51:59.772Z",
+  "lastUpdated": "2026-02-18T05:10:47.830Z",
   "activeFeatures": [
     "bible-quiz-game",
     "attendance-improvement",
@@ -43,7 +43,16 @@
     "davids-sling",
     "_shared",
     "five-loaves",
-    "save"
+    "save",
+    "telegram",
+    "webhook",
+    "link",
+    "setup",
+    "lost-sheep",
+    "telegram-remote-control",
+    "unlink",
+    "attendance",
+    "talent"
   ],
   "primaryFeature": "davids-sling",
   "features": {
@@ -167,7 +176,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-02-13T18:23:07.481Z",
-        "lastUpdated": "2026-02-16T23:47:26.947Z"
+        "lastUpdated": "2026-02-18T05:07:46.888Z"
       },
       "lastFile": "C:\\AI Make\\03 Churchapp\\daniel\\src\\lib\\db.ts"
     },
@@ -219,9 +228,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-02-14T04:05:35.493Z",
-        "lastUpdated": "2026-02-14T04:57:01.569Z"
+        "lastUpdated": "2026-02-18T05:08:32.315Z"
       },
-      "lastFile": "C:\\AI Make\\03 Churchapp\\daniel\\src\\app\\api\\attendance\\route.ts"
+      "lastFile": "C:\\AI Make\\03 Churchapp\\daniel\\src\\app\\api\\export\\attendance\\route.ts"
     },
     "[id]": {
       "phase": "do",
@@ -297,9 +306,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-02-14T04:54:35.272Z",
-        "lastUpdated": "2026-02-15T13:19:20.069Z"
+        "lastUpdated": "2026-02-18T05:10:47.829Z"
       },
-      "lastFile": "C:\\AI Make\\03 Churchapp\\daniel\\src\\app\\api\\settings\\route.ts"
+      "lastFile": "C:\\AI Make\\03 Churchapp\\daniel\\src\\app\\(dashboard)\\settings\\page.tsx"
     },
     "users": {
       "phase": "do",
@@ -323,9 +332,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-02-14T04:54:51.501Z",
-        "lastUpdated": "2026-02-14T04:56:20.567Z"
+        "lastUpdated": "2026-02-18T05:08:53.441Z"
       },
-      "lastFile": "C:\\AI Make\\03 Churchapp\\daniel\\src\\app\\api\\parent\\talent\\route.ts"
+      "lastFile": "C:\\AI Make\\03 Churchapp\\daniel\\src\\app\\api\\export\\talent\\route.ts"
     },
     "history": {
       "phase": "do",
@@ -544,9 +553,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-02-15T15:56:46.251Z",
-        "lastUpdated": "2026-02-16T16:48:13.850Z"
+        "lastUpdated": "2026-02-18T02:51:16.868Z"
       },
-      "lastFile": "C:\\AI Make\\03 Churchapp\\daniel\\src\\app\\(dashboard)\\games\\five-loaves\\_lib\\renderer.ts"
+      "lastFile": "C:\\AI Make\\03 Churchapp\\daniel\\src\\app\\(dashboard)\\games\\lost-sheep\\_lib\\renderer.ts"
     },
     "_components": {
       "phase": "do",
@@ -557,9 +566,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-02-15T15:58:27.823Z",
-        "lastUpdated": "2026-02-16T16:50:18.810Z"
+        "lastUpdated": "2026-02-18T02:50:59.883Z"
       },
-      "lastFile": "C:\\AI Make\\03 Churchapp\\daniel\\src\\app\\(dashboard)\\games\\five-loaves\\_components\\FiveLoavesWrapper.tsx"
+      "lastFile": "C:\\AI Make\\03 Churchapp\\daniel\\src\\app\\(dashboard)\\games\\lost-sheep\\_components\\LostSheepGame.tsx"
     },
     "brick-breaker": {
       "phase": "do",
@@ -583,7 +592,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-02-15T16:01:38.912Z",
-        "lastUpdated": "2026-02-16T16:51:11.574Z"
+        "lastUpdated": "2026-02-18T01:07:09.891Z"
       },
       "lastFile": "C:\\AI Make\\03 Churchapp\\daniel\\src\\app\\(dashboard)\\games\\page.tsx"
     },
@@ -596,9 +605,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-02-15T16:02:12.456Z",
-        "lastUpdated": "2026-02-16T16:50:41.618Z"
+        "lastUpdated": "2026-02-18T01:06:59.725Z"
       },
-      "lastFile": "C:\\AI Make\\03 Churchapp\\daniel\\src\\app\\api\\games\\five-loaves\\reward\\route.ts"
+      "lastFile": "C:\\AI Make\\03 Churchapp\\daniel\\src\\app\\api\\games\\lost-sheep\\reward\\route.ts"
     },
     "noahs-ark": {
       "phase": "do",
@@ -746,7 +755,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-02-16T03:13:12.960Z",
-        "lastUpdated": "2026-02-16T16:51:02.541Z"
+        "lastUpdated": "2026-02-18T01:07:30.288Z"
       },
       "lastFile": "C:\\AI Make\\03 Churchapp\\daniel\\src\\app\\(dashboard)\\games\\_shared\\soundEngine.ts"
     },
@@ -775,6 +784,98 @@
         "lastUpdated": "2026-02-16T23:48:08.096Z"
       },
       "lastFile": "C:\\AI Make\\03 Churchapp\\daniel\\src\\app\\api\\quiz\\save\\route.ts"
+    },
+    "telegram": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-02-18T01:02:45.871Z",
+        "lastUpdated": "2026-02-18T01:04:20.861Z"
+      },
+      "lastFile": "C:\\AI Make\\03 Churchapp\\daniel\\src\\lib\\telegram\\handlers.ts"
+    },
+    "webhook": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-02-18T01:04:47.373Z",
+        "lastUpdated": "2026-02-18T01:04:47.373Z"
+      },
+      "lastFile": "C:\\AI Make\\03 Churchapp\\daniel\\src\\app\\api\\telegram\\webhook\\route.ts"
+    },
+    "link": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-02-18T01:04:54.527Z",
+        "lastUpdated": "2026-02-18T01:04:54.528Z"
+      },
+      "lastFile": "C:\\AI Make\\03 Churchapp\\daniel\\src\\app\\api\\telegram\\link\\route.ts"
+    },
+    "setup": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-02-18T01:04:56.678Z",
+        "lastUpdated": "2026-02-18T01:04:56.678Z"
+      },
+      "lastFile": "C:\\AI Make\\03 Churchapp\\daniel\\src\\app\\api\\telegram\\setup\\route.ts"
+    },
+    "lost-sheep": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-02-18T01:06:47.859Z",
+        "lastUpdated": "2026-02-18T01:06:47.859Z"
+      },
+      "lastFile": "C:\\AI Make\\03 Churchapp\\daniel\\src\\app\\(dashboard)\\games\\lost-sheep\\page.tsx"
+    },
+    "telegram-remote-control": {
+      "phase": "act",
+      "phaseNumber": 5,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-02-18T02:16:53.548Z",
+        "lastUpdated": "2026-02-18T02:16:53.549Z"
+      },
+      "previousPhase": "check",
+      "autoAdvanced": true
+    },
+    "unlink": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-02-18T02:48:46.870Z",
+        "lastUpdated": "2026-02-18T02:48:46.870Z"
+      },
+      "lastFile": "C:\\AI Make\\03 Churchapp\\daniel\\src\\app\\api\\telegram\\unlink\\route.ts"
     }
   },
   "pipeline": {
@@ -785,7 +886,7 @@
   "session": {
     "startedAt": "2026-02-13T11:14:24.300Z",
     "onboardingCompleted": false,
-    "lastActivity": "2026-02-16T23:51:59.772Z"
+    "lastActivity": "2026-02-18T05:10:47.830Z"
   },
   "history": [
     {
@@ -2655,6 +2756,270 @@
     {
       "timestamp": "2026-02-16T23:51:59.771Z",
       "feature": "result",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T00:48:44.921Z",
+      "feature": "_lib",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T00:53:53.002Z",
+      "feature": "_lib",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T00:55:23.778Z",
+      "feature": "_lib",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T01:02:21.652Z",
+      "feature": "daniel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T01:02:45.871Z",
+      "feature": "telegram",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T01:02:53.256Z",
+      "feature": "telegram",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T01:03:09.613Z",
+      "feature": "telegram",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T01:03:15.276Z",
+      "feature": "_lib",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T01:04:20.861Z",
+      "feature": "telegram",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T01:04:47.374Z",
+      "feature": "webhook",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T01:04:53.194Z",
+      "feature": "_lib",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T01:04:54.528Z",
+      "feature": "link",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T01:04:56.678Z",
+      "feature": "setup",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T01:05:09.759Z",
+      "feature": "_components",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T01:05:15.633Z",
+      "feature": "settings",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T01:05:17.635Z",
+      "feature": "_components",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T01:05:20.182Z",
+      "feature": "settings",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T01:05:28.051Z",
+      "feature": "settings",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T01:05:36.036Z",
+      "feature": "settings",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T01:05:37.141Z",
+      "feature": "_components",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T01:05:45.854Z",
+      "feature": "settings",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T01:05:53.561Z",
+      "feature": "settings",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T01:06:17.427Z",
+      "feature": "settings",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T01:06:34.792Z",
+      "feature": "_components",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T01:06:45.069Z",
+      "feature": "_components",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T01:06:47.859Z",
+      "feature": "lost-sheep",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T01:06:59.725Z",
+      "feature": "reward",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T01:07:09.891Z",
+      "feature": "games",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T01:07:30.288Z",
+      "feature": "_shared",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T02:16:53.549Z",
+      "feature": "telegram-remote-control",
+      "phase": "act",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T02:48:24.743Z",
+      "feature": "settings",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T02:48:46.870Z",
+      "feature": "unlink",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T02:50:59.883Z",
+      "feature": "_components",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T02:51:08.017Z",
+      "feature": "_lib",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T02:51:16.868Z",
+      "feature": "_lib",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T05:07:46.888Z",
+      "feature": "daniel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T05:08:32.316Z",
+      "feature": "attendance",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T05:08:53.441Z",
+      "feature": "talent",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T05:09:17.047Z",
+      "feature": "settings",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T05:09:22.261Z",
+      "feature": "settings",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T05:09:35.028Z",
+      "feature": "settings",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T05:09:46.701Z",
+      "feature": "settings",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T05:09:54.170Z",
+      "feature": "settings",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T05:10:47.830Z",
+      "feature": "settings",
       "phase": "do",
       "action": "updated"
     }

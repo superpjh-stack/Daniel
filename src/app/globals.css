@@ -259,3 +259,56 @@ body {
     opacity: 1;
   }
 }
+
+/* ─── 인쇄 스타일 ─── */
+@media print {
+  /* 사이드바, 헤더, 탭 버튼, 필터 영역 숨김 */
+  nav,
+  aside,
+  header,
+  .no-print {
+    display: none !important;
+  }
+
+  /* 인쇄 전용 요소 표시 */
+  .print-only {
+    display: block !important;
+  }
+
+  /* 페이지 여백 */
+  body {
+    margin: 0;
+    padding: 1cm;
+    background: white !important;
+  }
+
+  /* 테이블 스타일 */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11pt;
+  }
+
+  th, td {
+    border: 1px solid #ccc !important;
+    padding: 4px 8px !important;
+  }
+
+  th {
+    background: #f3f4f6 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* 카드 그림자 제거 */
+  .print-content .card,
+  .print-content [class*="shadow"] {
+    box-shadow: none !important;
+    border: 1px solid #ddd;
+  }
+
+  /* 페이지 나눔 방지 */
+  tr {
+    page-break-inside: avoid;
+  }
+}

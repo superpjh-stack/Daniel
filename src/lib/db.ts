@@ -664,6 +664,89 @@ export async function getTopStudentsByTalent(limit: number = 5): Promise<{ id: s
   return students;
 }
 
+// ─── Export 함수 (기간별 조회) ───
+
+export async function getAttendanceByPeriod(
+  year: number,
+  month?: number,
+  classId?: string
+): Promise<{ date: string; studentId: string; studentName: string; grade: number; className: string | null; status: string; memo: string | null }[]> {
+  const startDate = month
+    ? new Date(year, month - 1, 1)
+    : new Date(year, 0, 1);
+  const endDate = month
+    ? new Date(year, month, 1)
+    : new Date(year + 1, 0, 1);
+
+  const where: Record<string, unknown> = {
+    date: { gte: startDate, lt: endDate },
+  };
+  if (classId && classId !== 'all') {
+    where.student = { classId };
+  }
+
+  const records = await prisma.attendance.findMany({
+    where,
+    include: {
+      student: {
+        select: { name: true, grade: true, class: { select: { name: true } } },
+      },
+    },
+    orderBy: [{ date: 'asc' }, { student: { grade: 'asc' } }],
+  });
+
+  return records.map(r => ({
+    date: r.date.toISOString().split('T')[0],
+    studentId: r.studentId,
+    studentName: r.student.name,
+    grade: r.student.grade,
+    className: r.student.class?.name ?? null,
+    status: r.status,
+    memo: r.memo,
+  }));
+}
+
+export async function getTalentHistoryByPeriod(
+  year: number,
+  month?: number,
+  classId?: string
+): Promise<{ date: string; studentId: string; studentName: string; grade: number; className: string | null; amount: number; reason: string; type: string }[]> {
+  const startDate = month
+    ? new Date(year, month - 1, 1)
+    : new Date(year, 0, 1);
+  const endDate = month
+    ? new Date(year, month, 1)
+    : new Date(year + 1, 0, 1);
+
+  const where: Record<string, unknown> = {
+    createdAt: { gte: startDate, lt: endDate },
+  };
+  if (classId && classId !== 'all') {
+    where.student = { classId };
+  }
+
+  const records = await prisma.talent.findMany({
+    where,
+    include: {
+      student: {
+        select: { name: true, grade: true, class: { select: { name: true } } },
+      },
+    },
+    orderBy: [{ createdAt: 'asc' }, { student: { grade: 'asc' } }],
+  });
+
+  return records.map(r => ({
+    date: r.createdAt.toISOString().split('T')[0],
+    studentId: r.studentId,
+    studentName: r.student.name,
+    grade: r.student.grade,
+    className: r.student.class?.name ?? null,
+    amount: r.amount,
+    reason: r.reason,
+    type: r.type,
+  }));
+}
+
 // ─── Product/Shop 함수 (7개) ───
 
 export async function getAllProducts(): Promise<Product[]> {
@@ -1978,4 +2061,67 @@ export async function getLandingStats(): Promise<{
   const totalTalent = result._sum.talentBalance || 0;
 
   return { studentCount, attendanceRate, totalTalent };
+}
+
+// ─── Telegram 함수 ───
+
+export async function getTelegramLinkByChatId(
+  chatId: string
+): Promise<{ id: string; userId: string; user: { id: string; name: string; role: string } } | null> {
+  const link = await prisma.telegramLink.findUnique({
+    where: { chatId, isActive: true },
+    include: { user: { select: { id: true, name: true, role: true } } },
+  });
+  return link;
+}
+
+export async function createTelegramLink(
+  chatId: string, userId: string, username?: string
+): Promise<void> {
+  await prisma.telegramLink.upsert({
+    where: { chatId },
+    update: { userId, username: username || null, isActive: true },
+    create: { chatId, userId, username: username || null },
+  });
+}
+
+export async function deleteTelegramLinkByChatId(chatId: string): Promise<void> {
+  await prisma.telegramLink.updateMany({
+    where: { chatId },
+    data: { isActive: false },
+  });
+}
+
+export async function getActiveTelegramLinks(): Promise<
+  { chatId: string; userId: string; userName: string; userRole: string; username: string | null }[]
+> {
+  const links = await prisma.telegramLink.findMany({
+    where: { isActive: true },
+    include: { user: { select: { name: true, role: true } } },
+    orderBy: { linkedAt: 'desc' },
+  });
+  return links.map(l => ({
+    chatId: l.chatId,
+    userId: l.userId,
+    userName: l.user.name,
+    userRole: l.user.role,
+    username: l.username,
+  }));
+}
+
+export async function findStudentsByName(
+  name: string
+): Promise<{ id: string; name: string; grade: number; className: string | null; talentBalance: number }[]> {
+  const students = await prisma.student.findMany({
+    where: { name },
+    include: { class: { select: { name: true } } },
+    orderBy: [{ grade: 'asc' }, { name: 'asc' }],
+  });
+  return students.map(s => ({
+    id: s.id,
+    name: s.name,
+    grade: s.grade,
+    className: s.class?.name ?? null,
+    talentBalance: s.talentBalance,
+  }));
 }

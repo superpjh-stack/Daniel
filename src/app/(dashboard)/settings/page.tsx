@@ -13,7 +13,14 @@ import {
   Save,
   X,
   Coins,
-  UserCheck
+  UserCheck,
+  Bot,
+  Copy,
+  Unlink,
+  Wifi,
+  Printer,
+  Download,
+  FileText,
 } from 'lucide-react';
 import { Header } from '@/components/layout';
 import { Card, Button, Badge, Avatar, Input } from '@/components/ui';
@@ -53,7 +60,7 @@ export default function SettingsPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [classes, setClasses] = useState<Class[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'users' | 'classes' | 'talent' | 'parents'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'classes' | 'talent' | 'parents' | 'telegram' | 'export'>('users');
 
   // 모달 상태
   const [showUserModal, setShowUserModal] = useState(false);
@@ -89,6 +96,24 @@ export default function SettingsPage() {
     phone: '',
     studentIds: [] as string[],
   });
+
+  // 텔레그램 상태
+  const [telegramConfigured, setTelegramConfigured] = useState(false);
+  const [telegramLinks, setTelegramLinks] = useState<{ chatId: string; userId: string; userName: string; userRole: string; username: string | null }[]>([]);
+  const [linkCode, setLinkCode] = useState<string | null>(null);
+  const [linkCodeExpiry, setLinkCodeExpiry] = useState(0);
+  const [webhookUrl, setWebhookUrl] = useState('');
+  const [telegramLoading, setTelegramLoading] = useState(false);
+
+  // 출력 상태
+  const currentYear = new Date().getFullYear();
+  const [exportType, setExportType] = useState<'attendance' | 'talent'>('attendance');
+  const [exportPeriodType, setExportPeriodType] = useState<'monthly' | 'yearly'>('monthly');
+  const [exportYear, setExportYear] = useState(currentYear);
+  const [exportMonth, setExportMonth] = useState(new Date().getMonth() + 1);
+  const [exportClassId, setExportClassId] = useState('all');
+  const [exportData, setExportData] = useState<Record<string, unknown>[]>([]);
+  const [exportLoading, setExportLoading] = useState(false);
 
   // 달란트 설정 상태
   const [talentSettings, setTalentSettings] = useState({
@@ -140,6 +165,18 @@ export default function SettingsPage() {
           grade: s.grade,
           className: s.className || null,
         })));
+      }
+
+      // Telegram 상태 로드
+      try {
+        const telegramRes = await fetch('/api/telegram/link');
+        if (telegramRes.ok) {
+          const data = await telegramRes.json();
+          setTelegramConfigured(data.configured);
+          setTelegramLinks(data.links || []);
+        }
+      } catch {
+        // Telegram 로드 실패는 무시
       }
     } catch (error) {
       console.error('Failed to fetch data:', error);
@@ -364,6 +401,91 @@ export default function SettingsPage() {
     }));
   };
 
+  // 텔레그램 핸들러
+  const handleGenerateLinkCode = async () => {
+    try {
+      const res = await fetch('/api/telegram/link', { method: 'POST' });
+      if (res.ok) {
+        const data = await res.json();
+        setLinkCode(data.code);
+        setLinkCodeExpiry(data.expiresIn);
+        // 만료 카운트다운
+        const interval = setInterval(() => {
+          setLinkCodeExpiry(prev => {
+            if (prev <= 1) {
+              clearInterval(interval);
+              setLinkCode(null);
+              return 0;
+            }
+            return prev - 1;
+          });
+        }, 1000);
+      } else {
+        const data = await res.json();
+        alert(data.error || '연결코드 발급에 실패했습니다.');
+      }
+    } catch {
+      alert('연결코드 발급에 실패했습니다.');
+    }
+  };
+
+  const handleSetupWebhook = async () => {
+    if (!webhookUrl) return;
+    setTelegramLoading(true);
+    try {
+      const res = await fetch('/api/telegram/setup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ webhookUrl }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        alert('Webhook 설정이 완료되었습니다.');
+      } else {
+        alert(data.description || 'Webhook 설정에 실패했습니다.');
+      }
+    } catch {
+      alert('Webhook 설정에 실패했습니다.');
+    } finally {
+      setTelegramLoading(false);
+    }
+  };
+
+  const fetchExportData = async () => {
+    setExportLoading(true);
+    try {
+      const params = new URLSearchParams({ year: String(exportYear) });
+      if (exportPeriodType === 'monthly') params.set('month', String(exportMonth));
+      if (exportClassId !== 'all') params.set('classId', exportClassId);
+
+      const endpoint = exportType === 'attendance'
+        ? `/api/export/attendance?${params}`
+        : `/api/export/talent?${params}`;
+
+      const res = await fetch(endpoint);
+      if (res.ok) {
+        const data = await res.json();
+        setExportData(data.records || []);
+      }
+    } catch (error) {
+      console.error('Export fetch error:', error);
+    } finally {
+      setExportLoading(false);
+    }
+  };
+
+  const handleDownloadCsv = () => {
+    const params = new URLSearchParams({ year: String(exportYear), format: 'csv' });
+    if (exportPeriodType === 'monthly') params.set('month', String(exportMonth));
+    if (exportClassId !== 'all') params.set('classId', exportClassId);
+
+    const endpoint = exportType === 'attendance'
+      ? `/api/export/attendance?${params}`
+      : `/api/export/talent?${params}`;
+
+    window.open(endpoint, '_blank');
+  };
+
   const handleDeleteClass = async (id: string) => {
     if (!confirm('정말 삭제하시겠습니까?')) return;
 
@@ -432,6 +554,28 @@ export default function SettingsPage() {
         >
           <UserCheck size={18} />
           학부모 관리
+        </button>
+        <button
+          onClick={() => setActiveTab('telegram')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all ${
+            activeTab === 'telegram'
+              ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg'
+              : 'bg-white/80 text-gray-600 hover:bg-purple-50'
+          }`}
+        >
+          <Bot size={18} />
+          텔레그램
+        </button>
+        <button
+          onClick={() => setActiveTab('export')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all ${
+            activeTab === 'export'
+              ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg'
+              : 'bg-white/80 text-gray-600 hover:bg-purple-50'
+          }`}
+        >
+          <Printer size={18} />
+          출력
         </button>
       </div>
 
@@ -691,6 +835,387 @@ export default function SettingsPage() {
                 </motion.div>
               ))}
             </div>
+          )}
+        </div>
+      )}
+
+      {/* 텔레그램 설정 */}
+      {activeTab === 'telegram' && (
+        <div className="space-y-4">
+          {/* 봇 상태 */}
+          <Card>
+            <div className="flex items-center gap-3 mb-4">
+              <div className={`w-3 h-3 rounded-full ${telegramConfigured ? 'bg-green-500' : 'bg-red-400'}`} />
+              <h3 className="font-bold text-gray-800">
+                봇 상태: {telegramConfigured ? '설정됨' : '미설정'}
+              </h3>
+            </div>
+            {!telegramConfigured && (
+              <div className="bg-yellow-50 rounded-xl p-4 text-sm text-yellow-700">
+                <p className="font-medium mb-1">설정 방법</p>
+                <ol className="list-decimal list-inside space-y-1">
+                  <li>Telegram에서 @BotFather를 검색하세요</li>
+                  <li>/newbot 명령으로 새 봇을 만드세요</li>
+                  <li>발급받은 토큰을 서버 환경변수 <code className="bg-yellow-100 px-1 rounded">TELEGRAM_BOT_TOKEN</code>에 설정하세요</li>
+                  <li>아래에서 Webhook URL을 등록하세요</li>
+                </ol>
+              </div>
+            )}
+          </Card>
+
+          {/* 연결코드 발급 */}
+          {telegramConfigured && (
+            <Card>
+              <h3 className="font-bold text-gray-800 mb-4">연결코드 발급</h3>
+              <p className="text-sm text-gray-500 mb-4">
+                Telegram 봇에서 <code className="bg-gray-100 px-1 rounded">/연결 코드</code>를 입력하여 계정을 연결합니다.
+              </p>
+
+              {linkCode ? (
+                <div className="bg-purple-50 rounded-xl p-4 text-center">
+                  <p className="text-sm text-purple-600 mb-2">연결코드</p>
+                  <div className="flex items-center justify-center gap-2">
+                    <p className="text-3xl font-mono font-bold text-purple-700 tracking-widest">{linkCode}</p>
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(linkCode);
+                        alert('복사되었습니다!');
+                      }}
+                      className="p-2 text-purple-600 hover:bg-purple-100 rounded-lg"
+                    >
+                      <Copy size={18} />
+                    </button>
+                  </div>
+                  <p className="text-xs text-purple-400 mt-2">
+                    {Math.floor(linkCodeExpiry / 60)}분 {linkCodeExpiry % 60}초 후 만료
+                  </p>
+                </div>
+              ) : (
+                <Button variant="secondary" onClick={handleGenerateLinkCode} className="w-full">
+                  <Bot size={18} className="mr-2" />
+                  연결코드 발급
+                </Button>
+              )}
+            </Card>
+          )}
+
+          {/* 연결된 기기 목록 */}
+          {telegramConfigured && (
+            <Card>
+              <h3 className="font-bold text-gray-800 mb-4">
+                연결된 기기 ({telegramLinks.length}개)
+              </h3>
+              {telegramLinks.length === 0 ? (
+                <p className="text-sm text-gray-400 text-center py-4">
+                  연결된 Telegram 계정이 없습니다
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  {telegramLinks.map((link) => (
+                    <div key={link.chatId} className="flex items-center justify-between bg-gray-50 rounded-xl p-3">
+                      <div className="flex items-center gap-3">
+                        <Bot size={20} className="text-blue-500" />
+                        <div>
+                          <p className="font-medium text-gray-800">
+                            {link.userName}
+                            {link.username && <span className="text-gray-400 ml-1">@{link.username}</span>}
+                          </p>
+                          <Badge variant={link.userRole === 'admin' ? 'gold' : 'purple'} className="text-xs">
+                            {link.userRole === 'admin' ? '관리자' : '교사'}
+                          </Badge>
+                        </div>
+                      </div>
+                      <button
+                        onClick={async () => {
+                          if (!confirm(`${link.userName}의 Telegram 연결을 해제하시겠습니까?`)) return;
+                          try {
+                            const res = await fetch('/api/telegram/unlink', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ chatId: link.chatId }),
+                            });
+                            if (res.ok) {
+                              setTelegramLinks(prev => prev.filter(l => l.chatId !== link.chatId));
+                            } else {
+                              alert('연결 해제에 실패했습니다.');
+                            }
+                          } catch {
+                            alert('연결 해제에 실패했습니다.');
+                          }
+                        }}
+                        className="p-2 text-red-400 hover:bg-red-50 rounded-lg transition-colors"
+                        title="연결 해제"
+                      >
+                        <Unlink size={16} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Card>
+          )}
+
+          {/* Webhook 설정 */}
+          <Card>
+            <h3 className="font-bold text-gray-800 mb-4">Webhook 설정</h3>
+            <div className="space-y-3">
+              <Input
+                label="Webhook URL"
+                placeholder="https://your-domain.com/api/telegram/webhook"
+                value={webhookUrl}
+                onChange={(e) => setWebhookUrl(e.target.value)}
+              />
+              <Button
+                variant="primary"
+                className="w-full"
+                onClick={handleSetupWebhook}
+                isLoading={telegramLoading}
+                disabled={!webhookUrl || !telegramConfigured}
+              >
+                <Wifi size={18} className="mr-2" />
+                Webhook 등록
+              </Button>
+              {!telegramConfigured && (
+                <p className="text-xs text-red-400">TELEGRAM_BOT_TOKEN이 설정되어야 사용할 수 있습니다.</p>
+              )}
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {/* 출력 탭 */}
+      {activeTab === 'export' && (
+        <div className="space-y-6 print-content">
+          {/* 필터 영역 */}
+          <Card>
+            <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
+              <FileText size={20} />
+              출력 설정
+            </h3>
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+              {/* 출력 종류 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">출력 종류</label>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => { setExportType('attendance'); setExportData([]); }}
+                    className={`flex-1 py-2 rounded-xl text-sm font-medium transition-all ${exportType === 'attendance' ? 'bg-purple-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-purple-50'}`}
+                  >
+                    출석부
+                  </button>
+                  <button
+                    onClick={() => { setExportType('talent'); setExportData([]); }}
+                    className={`flex-1 py-2 rounded-xl text-sm font-medium transition-all ${exportType === 'talent' ? 'bg-purple-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-purple-50'}`}
+                  >
+                    달란트
+                  </button>
+                </div>
+              </div>
+
+              {/* 기간 유형 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">기간 유형</label>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => { setExportPeriodType('monthly'); setExportData([]); }}
+                    className={`flex-1 py-2 rounded-xl text-sm font-medium transition-all ${exportPeriodType === 'monthly' ? 'bg-purple-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-purple-50'}`}
+                  >
+                    월별
+                  </button>
+                  <button
+                    onClick={() => { setExportPeriodType('yearly'); setExportData([]); }}
+                    className={`flex-1 py-2 rounded-xl text-sm font-medium transition-all ${exportPeriodType === 'yearly' ? 'bg-purple-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-purple-50'}`}
+                  >
+                    연별
+                  </button>
+                </div>
+              </div>
+
+              {/* 연도 + 월 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">연도</label>
+                <select
+                  value={exportYear}
+                  onChange={(e) => { setExportYear(Number(e.target.value)); setExportData([]); }}
+                  className="w-full px-3 py-2 bg-white border-2 border-purple-200 rounded-xl focus:outline-none focus:border-purple-400 text-sm"
+                >
+                  {Array.from({ length: 6 }, (_, i) => currentYear - 2 + i).map(y => (
+                    <option key={y} value={y}>{y}년</option>
+                  ))}
+                </select>
+              </div>
+
+              {exportPeriodType === 'monthly' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">월</label>
+                  <select
+                    value={exportMonth}
+                    onChange={(e) => { setExportMonth(Number(e.target.value)); setExportData([]); }}
+                    className="w-full px-3 py-2 bg-white border-2 border-purple-200 rounded-xl focus:outline-none focus:border-purple-400 text-sm"
+                  >
+                    {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
+                      <option key={m} value={m}>{m}월</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
+
+            <div className="mt-4 flex gap-3 items-end">
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700 mb-2">반 선택</label>
+                <select
+                  value={exportClassId}
+                  onChange={(e) => { setExportClassId(e.target.value); setExportData([]); }}
+                  className="w-full px-3 py-2 bg-white border-2 border-purple-200 rounded-xl focus:outline-none focus:border-purple-400 text-sm"
+                >
+                  <option value="all">전체 반</option>
+                  {classes.map(c => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <Button
+                variant="secondary"
+                onClick={fetchExportData}
+                isLoading={exportLoading}
+                className="no-print"
+              >
+                <FileText size={18} className="mr-2" />
+                조회
+              </Button>
+            </div>
+          </Card>
+
+          {/* 결과 테이블 */}
+          {exportData.length > 0 && (
+            <Card>
+              <div className="flex justify-between items-center mb-4 no-print">
+                <h3 className="font-bold text-gray-800">
+                  {exportType === 'attendance' ? '출석부' : '달란트 내역'} — {exportYear}년{exportPeriodType === 'monthly' ? ` ${exportMonth}월` : ''}
+                  {exportClassId !== 'all' && ` · ${classes.find(c => c.id === exportClassId)?.name}`}
+                  <span className="ml-2 text-sm font-normal text-gray-500">({exportData.length}건)</span>
+                </h3>
+                <div className="flex gap-2">
+                  <Button variant="ghost" onClick={handleDownloadCsv} className="no-print">
+                    <Download size={18} className="mr-2" />
+                    CSV 다운로드
+                  </Button>
+                  <Button variant="secondary" onClick={() => window.print()} className="no-print">
+                    <Printer size={18} className="mr-2" />
+                    인쇄
+                  </Button>
+                </div>
+              </div>
+
+              {/* 인쇄용 제목 (화면에서는 숨김) */}
+              <div className="print-only hidden">
+                <h2 className="text-xl font-bold text-center mb-1">
+                  {exportType === 'attendance' ? '출석부' : '달란트 내역'}
+                </h2>
+                <p className="text-center text-sm text-gray-600 mb-4">
+                  {exportYear}년{exportPeriodType === 'monthly' ? ` ${exportMonth}월` : ''}
+                  {exportClassId !== 'all' && ` · ${classes.find(c => c.id === exportClassId)?.name}`}
+                  {' '}· 총 {exportData.length}건
+                </p>
+              </div>
+
+              <div className="overflow-x-auto">
+                {exportType === 'attendance' ? (
+                  <table className="w-full text-sm border-collapse">
+                    <thead>
+                      <tr className="bg-purple-50">
+                        <th className="px-3 py-2 text-left border border-purple-200 font-semibold">날짜</th>
+                        <th className="px-3 py-2 text-left border border-purple-200 font-semibold">학생</th>
+                        <th className="px-3 py-2 text-left border border-purple-200 font-semibold">학년</th>
+                        <th className="px-3 py-2 text-left border border-purple-200 font-semibold">반</th>
+                        <th className="px-3 py-2 text-left border border-purple-200 font-semibold">상태</th>
+                        <th className="px-3 py-2 text-left border border-purple-200 font-semibold">메모</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(exportData as Array<{ date: string; studentName: string; grade: number; className: string | null; status: string; memo: string | null }>).map((row, i) => {
+                        const statusMap: Record<string, { label: string; cls: string }> = {
+                          present: { label: '출석', cls: 'text-green-600 font-medium' },
+                          late: { label: '지각', cls: 'text-yellow-600 font-medium' },
+                          absent: { label: '결석', cls: 'text-red-600 font-medium' },
+                        };
+                        const s = statusMap[row.status] || { label: row.status, cls: '' };
+                        return (
+                          <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                            <td className="px-3 py-2 border border-gray-200">{row.date}</td>
+                            <td className="px-3 py-2 border border-gray-200 font-medium">{row.studentName}</td>
+                            <td className="px-3 py-2 border border-gray-200">{row.grade}학년</td>
+                            <td className="px-3 py-2 border border-gray-200">{row.className || '-'}</td>
+                            <td className={`px-3 py-2 border border-gray-200 ${s.cls}`}>{s.label}</td>
+                            <td className="px-3 py-2 border border-gray-200 text-gray-500">{row.memo || ''}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                ) : (
+                  <table className="w-full text-sm border-collapse">
+                    <thead>
+                      <tr className="bg-purple-50">
+                        <th className="px-3 py-2 text-left border border-purple-200 font-semibold">날짜</th>
+                        <th className="px-3 py-2 text-left border border-purple-200 font-semibold">학생</th>
+                        <th className="px-3 py-2 text-left border border-purple-200 font-semibold">학년</th>
+                        <th className="px-3 py-2 text-left border border-purple-200 font-semibold">반</th>
+                        <th className="px-3 py-2 text-left border border-purple-200 font-semibold">유형</th>
+                        <th className="px-3 py-2 text-right border border-purple-200 font-semibold">금액</th>
+                        <th className="px-3 py-2 text-left border border-purple-200 font-semibold">사유</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(exportData as Array<{ date: string; studentName: string; grade: number; className: string | null; type: string; amount: number; reason: string }>).map((row, i) => {
+                        const typeMap: Record<string, { label: string; cls: string }> = {
+                          attendance: { label: '출석', cls: 'text-blue-600' },
+                          bonus: { label: '보너스', cls: 'text-green-600' },
+                          purchase: { label: '구매', cls: 'text-orange-600' },
+                        };
+                        const t = typeMap[row.type] || { label: row.type, cls: '' };
+                        return (
+                          <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                            <td className="px-3 py-2 border border-gray-200">{row.date}</td>
+                            <td className="px-3 py-2 border border-gray-200 font-medium">{row.studentName}</td>
+                            <td className="px-3 py-2 border border-gray-200">{row.grade}학년</td>
+                            <td className="px-3 py-2 border border-gray-200">{row.className || '-'}</td>
+                            <td className={`px-3 py-2 border border-gray-200 ${t.cls}`}>{t.label}</td>
+                            <td className={`px-3 py-2 border border-gray-200 text-right font-medium ${row.amount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                              {row.amount >= 0 ? '+' : ''}{row.amount}
+                            </td>
+                            <td className="px-3 py-2 border border-gray-200 text-gray-600">{row.reason}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                    <tfoot>
+                      <tr className="bg-purple-50 font-semibold">
+                        <td colSpan={5} className="px-3 py-2 border border-purple-200 text-right">합계</td>
+                        <td className={`px-3 py-2 border border-purple-200 text-right ${
+                          (exportData as Array<{ amount: number }>).reduce((s, r) => s + r.amount, 0) >= 0 ? 'text-green-600' : 'text-red-600'
+                        }`}>
+                          {(() => {
+                            const total = (exportData as Array<{ amount: number }>).reduce((s, r) => s + r.amount, 0);
+                            return (total >= 0 ? '+' : '') + total;
+                          })()}
+                        </td>
+                        <td className="px-3 py-2 border border-purple-200"></td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                )}
+              </div>
+            </Card>
+          )}
+
+          {exportData.length === 0 && !exportLoading && (
+            <Card className="text-center py-12">
+              <Printer size={48} className="mx-auto mb-4 text-gray-300" />
+              <p className="text-gray-500">필터를 선택하고 조회 버튼을 눌러주세요</p>
+            </Card>
           )}
         </div>
       )}
