@@ -104,14 +104,29 @@ async function main() {
   }
   console.log('✅ Students created');
 
-  // 상품 샘플 데이터
+  // 상품 샘플 데이터 (쿠팡 스타일 실제 상품)
   const products = [
-    { name: '연필 세트', description: '6자루 세트', price: 15, stock: 20 },
-    { name: '지우개', description: '귀여운 동물 모양', price: 5, stock: 30 },
-    { name: '노트', description: '줄 노트 A5', price: 10, stock: 25 },
-    { name: '색연필', description: '12색 세트', price: 30, stock: 15 },
-    { name: '스티커', description: '반짝이 스티커', price: 8, stock: 50 },
-    { name: '필통', description: '캐릭터 필통', price: 25, stock: 10 },
+    // 학용품
+    { name: '스테들러 노리스 연필 12자루 세트', description: 'HB 고급 연필, 부드러운 필기감', price: 20, stock: 15, category: 'school', image: 'https://picsum.photos/seed/pencil12/400/300' },
+    { name: '파버카스텔 색연필 24색 세트', description: '선명한 발색, 예술 작품 같은 채색', price: 35, stock: 10, category: 'school', image: 'https://picsum.photos/seed/colorpencil24/400/300' },
+    { name: '모나미 볼펜 3색 세트', description: '검정·파랑·빨강 부드러운 필기', price: 10, stock: 30, category: 'school', image: 'https://picsum.photos/seed/ballpen3/400/300' },
+    { name: '줄노트 A5 5권 묶음', description: '80g 고급 종이, 5mm 줄노트', price: 15, stock: 20, category: 'school', image: 'https://picsum.photos/seed/notebook5/400/300' },
+    { name: '귀여운 동물 지우개 세트', description: '캐릭터 동물 모양 5개 세트', price: 8, stock: 25, category: 'school', image: 'https://picsum.photos/seed/eraser5/400/300' },
+    { name: '캐릭터 필통 (포켓몬)', description: '포켓몬 캐릭터 대용량 필통', price: 28, stock: 12, category: 'school', image: 'https://picsum.photos/seed/pencilcase/400/300' },
+    // 간식
+    { name: '포켓몬 빵 3개 세트', description: '띠부씰 스티커 포함, 인기 간식', price: 25, stock: 20, category: 'snack', image: 'https://picsum.photos/seed/pokemon-bread/400/300' },
+    { name: '오리온 초코파이 12개입', description: '달콤한 초콜릿 마시멜로 파이', price: 30, stock: 15, category: 'snack', image: 'https://picsum.photos/seed/chocopie/400/300' },
+    { name: '하리보 젤리 믹스 세트', description: '알록달록 젤리 종합 선물 세트', price: 20, stock: 18, category: 'snack', image: 'https://picsum.photos/seed/haribo/400/300' },
+    { name: '빼빼로 5종 세트', description: '딸기·아몬드·화이트 5가지 맛', price: 18, stock: 22, category: 'snack', image: 'https://picsum.photos/seed/pepero/400/300' },
+    // 문화
+    { name: '문화상품권 소액권', description: '도서·음반·영화 사용 가능', price: 80, stock: 5, category: 'culture', image: 'https://picsum.photos/seed/voucher/400/300' },
+    { name: '영화관람권 1매', description: 'CGV·롯데·메가박스 사용 가능', price: 60, stock: 8, category: 'culture', image: 'https://picsum.photos/seed/movie-ticket/400/300' },
+    // 특별
+    { name: '치킨 반마리 교환권', description: '교회 지정 매장에서 사용', price: 70, stock: 10, category: 'special', image: 'https://picsum.photos/seed/chicken/400/300' },
+    { name: '배스킨라빈스 파인트 교환권', description: '31가지 맛 중 선택', price: 45, stock: 12, category: 'special', image: 'https://picsum.photos/seed/icecream/400/300' },
+    // 기타
+    { name: '루미큐브 미니 보드게임', description: '숫자 조합 전략 보드게임', price: 55, stock: 6, category: 'etc', image: 'https://picsum.photos/seed/boardgame/400/300' },
+    { name: '레고 클래식 미니 세트', description: '창의력 키우는 기본 블록 세트', price: 50, stock: 8, category: 'etc', image: 'https://picsum.photos/seed/lego/400/300' },
   ];
 
   for (const product of products) {
