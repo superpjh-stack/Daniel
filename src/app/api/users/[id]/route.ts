@@ -22,6 +22,14 @@ export async function PUT(
       return NextResponse.json({ error: '사용자를 찾을 수 없습니다.' }, { status: 404 });
     }
 
+    // parent 역할 사용자는 이 엔드포인트로 수정 불가
+    if (existingUser.role === 'parent') {
+      return NextResponse.json({ error: '학부모 계정은 학부모 관리에서 수정하세요.' }, { status: 400 });
+    }
+    if (role === 'parent') {
+      return NextResponse.json({ error: '역할을 학부모로 변경할 수 없습니다.' }, { status: 400 });
+    }
+
     // 비밀번호 업데이트 여부 확인
     let hashedPassword: string | undefined;
     if (password && password.trim() !== '') {
@@ -58,6 +66,12 @@ export async function DELETE(
     // 자기 자신은 삭제 불가
     if (id === session.id) {
       return NextResponse.json({ error: '자신의 계정은 삭제할 수 없습니다.' }, { status: 400 });
+    }
+
+    // parent 역할 사용자는 이 엔드포인트로 삭제 불가
+    const targetUser = await getUserById(id);
+    if (targetUser?.role === 'parent') {
+      return NextResponse.json({ error: '학부모 계정은 학부모 관리에서 삭제하세요.' }, { status: 400 });
     }
 
     await deleteUser(id);

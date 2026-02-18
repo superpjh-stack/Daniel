@@ -11,7 +11,8 @@ export async function GET() {
     }
 
     const users = await getAllUsers();
-    return NextResponse.json(users);
+    const nonParentUsers = users.filter(u => u.role !== 'parent');
+    return NextResponse.json(nonParentUsers);
   } catch (error) {
     console.error('Users GET error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -29,6 +30,11 @@ export async function POST(request: NextRequest) {
 
     if (!loginId || !password || !name) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    }
+
+    // parent 역할은 /api/parents 엔드포인트를 통해서만 생성 가능
+    if (role === 'parent') {
+      return NextResponse.json({ error: '학부모 계정은 학부모 관리에서 추가하세요.' }, { status: 400 });
     }
 
     // 아이디 중복 확인

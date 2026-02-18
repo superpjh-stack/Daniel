@@ -21,6 +21,7 @@ import {
   Printer,
   Download,
   FileText,
+  MessageCircle,
 } from 'lucide-react';
 import { Header } from '@/components/layout';
 import { Card, Button, Badge, Avatar, Input } from '@/components/ui';
@@ -60,7 +61,7 @@ export default function SettingsPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [classes, setClasses] = useState<Class[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'users' | 'classes' | 'talent' | 'parents' | 'telegram' | 'export'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'classes' | 'talent' | 'parents' | 'telegram' | 'kakao' | 'export'>('users');
 
   // 모달 상태
   const [showUserModal, setShowUserModal] = useState(false);
@@ -104,6 +105,10 @@ export default function SettingsPage() {
   const [linkCodeExpiry, setLinkCodeExpiry] = useState(0);
   const [webhookUrl, setWebhookUrl] = useState('');
   const [telegramLoading, setTelegramLoading] = useState(false);
+
+  // 카카오 상태
+  const [kakaoJsKey, setKakaoJsKey] = useState('');
+  const [savingKakao, setSavingKakao] = useState(false);
 
   // 출력 상태
   const currentYear = new Date().getFullYear();
@@ -152,6 +157,7 @@ export default function SettingsPage() {
           streak_bonus_threshold: data.streak_bonus_threshold || '4',
           streak_bonus_points: data.streak_bonus_points || '10',
         });
+        setKakaoJsKey(data.kakao_js_key || '');
       }
       if (parentsRes.ok) {
         const data = await parentsRes.json();
@@ -451,6 +457,27 @@ export default function SettingsPage() {
     }
   };
 
+  const handleSaveKakao = async () => {
+    setSavingKakao(true);
+    try {
+      const res = await fetch('/api/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ kakao_js_key: kakaoJsKey }),
+      });
+      if (res.ok) {
+        alert('카카오 앱 키가 저장되었습니다.');
+      } else {
+        const data = await res.json();
+        alert(data.error || '저장에 실패했습니다.');
+      }
+    } catch {
+      alert('저장에 실패했습니다.');
+    } finally {
+      setSavingKakao(false);
+    }
+  };
+
   const fetchExportData = async () => {
     setExportLoading(true);
     try {
@@ -565,6 +592,17 @@ export default function SettingsPage() {
         >
           <Bot size={18} />
           텔레그램
+        </button>
+        <button
+          onClick={() => setActiveTab('kakao')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all ${
+            activeTab === 'kakao'
+              ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg'
+              : 'bg-white/80 text-gray-600 hover:bg-purple-50'
+          }`}
+        >
+          <MessageCircle size={18} />
+          카카오
         </button>
         <button
           onClick={() => setActiveTab('export')}
@@ -978,6 +1016,58 @@ export default function SettingsPage() {
               {!telegramConfigured && (
                 <p className="text-xs text-red-400">TELEGRAM_BOT_TOKEN이 설정되어야 사용할 수 있습니다.</p>
               )}
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {/* 카카오 설정 */}
+      {activeTab === 'kakao' && (
+        <div className="space-y-4">
+          <Card>
+            <div className="flex items-center gap-3 mb-4">
+              <div className={`w-3 h-3 rounded-full ${kakaoJsKey ? 'bg-green-500' : 'bg-gray-300'}`} />
+              <h3 className="font-bold text-gray-800">
+                카카오 앱 키: {kakaoJsKey ? '설정됨' : '미설정'}
+              </h3>
+            </div>
+
+            <div className="bg-yellow-50 rounded-xl p-4 text-sm text-yellow-800 mb-4">
+              <p className="font-medium mb-2">설정 방법</p>
+              <ol className="list-decimal list-inside space-y-1">
+                <li><a href="https://developers.kakao.com" target="_blank" rel="noreferrer" className="underline">developers.kakao.com</a> 에서 앱을 만드세요</li>
+                <li>플랫폼 → Web → 사이트 도메인 등록 (앱 주소)</li>
+                <li>앱 키 → <strong>JavaScript 키</strong> 복사</li>
+                <li>제품 설정 → 카카오링크 → 활성화</li>
+              </ol>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  JavaScript 앱 키
+                </label>
+                <input
+                  type="text"
+                  placeholder="예: abc123def456..."
+                  value={kakaoJsKey}
+                  onChange={(e) => setKakaoJsKey(e.target.value)}
+                  className="w-full px-4 py-3 bg-white border-2 border-yellow-200 rounded-xl focus:outline-none focus:border-yellow-400 font-mono text-sm"
+                />
+                <p className="text-xs text-gray-400 mt-1">
+                  학부모 출석/달란트 페이지의 카카오톡 공유 버튼에 사용됩니다
+                </p>
+              </div>
+
+              <Button
+                variant="primary"
+                className="w-full"
+                onClick={handleSaveKakao}
+                isLoading={savingKakao}
+              >
+                <Save size={18} className="mr-2" />
+                저장하기
+              </Button>
             </div>
           </Card>
         </div>
@@ -1488,7 +1578,7 @@ export default function SettingsPage() {
                     className="w-full px-4 py-3 bg-white border-2 border-purple-200 rounded-xl focus:outline-none focus:border-purple-400"
                   >
                     <option value="">선택 안함</option>
-                    {users.map((u) => (
+                    {users.filter(u => u.role === 'teacher' || u.role === 'admin').map((u) => (
                       <option key={u.id} value={u.id}>{u.name}</option>
                     ))}
                   </select>
