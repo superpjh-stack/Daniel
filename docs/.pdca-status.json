@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-02-18T11:44:13.883Z",
+  "lastUpdated": "2026-02-18T21:06:16.498Z",
   "activeFeatures": [
     "bible-quiz-game",
     "attendance-improvement",
@@ -56,7 +56,10 @@
     "monthly",
     "stats",
     "parent",
-    "shop"
+    "shop",
+    "kakao-parent-share",
+    "intro",
+    "gallery-instagram-share"
   ],
   "primaryFeature": "davids-sling",
   "features": {
@@ -180,9 +183,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-02-13T18:23:07.481Z",
-        "lastUpdated": "2026-02-18T11:12:08.808Z"
+        "lastUpdated": "2026-02-18T12:46:02.239Z"
       },
-      "lastFile": "C:\\AI Make\\03 Churchapp\\daniel\\src\\components\\KakaoShareButton.tsx"
+      "lastFile": "C:\\AI Make\\03 Churchapp\\daniel\\deploy-aws.ps1"
     },
     "(dashboard)": {
       "phase": "do",
@@ -206,7 +209,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-02-14T03:49:33.454Z",
-        "lastUpdated": "2026-02-18T06:41:29.476Z"
+        "lastUpdated": "2026-02-18T21:03:23.378Z"
       },
       "lastFile": "C:\\AI Make\\03 Churchapp\\daniel\\src\\components\\layout\\Sidebar.tsx"
     },
@@ -666,22 +669,11 @@
       "lastFile": "C:\\AI Make\\03 Churchapp\\daniel\\src\\app\\(dashboard)\\hero-manage\\page.tsx"
     },
     "davids-sling": {
-      "phase": "check",
-      "phaseNumber": 4,
+      "phase": "archived",
       "matchRate": 97,
       "iterationCount": 0,
-      "requirements": [],
-      "documents": {
-        "plan": "docs/01-plan/features/davids-sling.plan.md",
-        "design": "docs/02-design/features/davids-sling.design.md",
-        "analysis": "docs/03-analysis/davids-sling.analysis.md"
-      },
-      "timestamps": {
-        "started": "2026-02-16T14:00:00.000Z",
-        "lastUpdated": "2026-02-16T03:00:00.000Z"
-      },
-      "previousPhase": "do",
-      "autoAdvanced": true
+      "archivedAt": "2026-02-19T00:00:00.000Z",
+      "archivedTo": "docs/archive/2026-02/davids-sling/"
     },
     "photo-gallery": {
       "phase": "completed",
@@ -710,9 +702,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-02-16T01:44:46.016Z",
-        "lastUpdated": "2026-02-18T10:30:21.249Z"
+        "lastUpdated": "2026-02-18T15:20:36.850Z"
       },
-      "lastFile": "C:\\AI Make\\03 Churchapp\\daniel\\src\\app\\(dashboard)\\gallery\\page.tsx"
+      "lastFile": "C:\\AI Make\\03 Churchapp\\daniel\\src\\components\\gallery\\GalleryShareButtons.tsx"
     },
     "comments": {
       "phase": "do",
@@ -922,6 +914,47 @@
         "lastUpdated": "2026-02-18T07:45:02.857Z"
       },
       "lastFile": "C:\\AI Make\\03 Churchapp\\daniel\\src\\app\\(dashboard)\\shop\\page.tsx"
+    },
+    "kakao-parent-share": {
+      "phase": "act",
+      "phaseNumber": 5,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-02-18T11:56:15.136Z",
+        "lastUpdated": "2026-02-18T11:56:15.146Z"
+      },
+      "previousPhase": "check",
+      "autoAdvanced": true
+    },
+    "intro": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-02-18T21:04:09.211Z",
+        "lastUpdated": "2026-02-18T21:04:09.211Z"
+      },
+      "lastFile": "C:\\AI Make\\03 Churchapp\\daniel\\src\\app\\(dashboard)\\intro\\page.tsx"
+    },
+    "gallery-instagram-share": {
+      "phase": "act",
+      "phaseNumber": 5,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-02-18T21:06:16.493Z",
+        "lastUpdated": "2026-02-18T21:06:16.497Z"
+      },
+      "previousPhase": "check",
+      "autoAdvanced": true
     }
   },
   "pipeline": {
@@ -932,7 +965,7 @@
   "session": {
     "startedAt": "2026-02-13T11:14:24.300Z",
     "onboardingCompleted": false,
-    "lastActivity": "2026-02-18T11:44:13.883Z"
+    "lastActivity": "2026-02-18T21:06:16.498Z"
   },
   "history": [
     {
@@ -3529,6 +3562,78 @@
       "timestamp": "2026-02-18T11:44:13.883Z",
       "feature": "[id]",
       "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T11:54:31.214Z",
+      "feature": "daniel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T11:56:01.874Z",
+      "feature": "daniel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T11:56:09.020Z",
+      "feature": "daniel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T11:56:15.146Z",
+      "feature": "kakao-parent-share",
+      "phase": "act",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T12:39:23.933Z",
+      "feature": "daniel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T12:46:02.239Z",
+      "feature": "daniel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T13:02:38.048Z",
+      "feature": "gallery",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T15:20:36.850Z",
+      "feature": "gallery",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T21:03:15.487Z",
+      "feature": "layout",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T21:03:23.378Z",
+      "feature": "layout",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T21:04:09.211Z",
+      "feature": "intro",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T21:06:16.497Z",
+      "feature": "gallery-instagram-share",
+      "phase": "act",
       "action": "updated"
     }
   ]

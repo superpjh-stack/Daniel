@@ -5,6 +5,8 @@ import { useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Star } from 'lucide-react';
 import { Card, Badge } from '@/components/ui';
+import KakaoShareButton from '@/components/KakaoShareButton';
+import { buildTalentShareOptions } from '@/lib/kakao';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 
@@ -87,11 +89,35 @@ export default function ParentTalentPage() {
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
       {/* 헤더 */}
-      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
-        <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-          <Star className="text-amber-500" /> 달란트 내역
-        </h1>
-        <p className="text-gray-500 mt-1">자녀의 달란트 현황을 확인하세요</p>
+      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+            <Star className="text-amber-500" /> 달란트 내역
+          </h1>
+          <p className="text-gray-500 mt-1">자녀의 달란트 현황을 확인하세요</p>
+        </div>
+        {student && (() => {
+          const now = new Date();
+          const monthEarned = transactions
+            .filter(t => {
+              const d = new Date(t.createdAt);
+              return d.getFullYear() === now.getFullYear()
+                && d.getMonth() === now.getMonth()
+                && t.amount > 0;
+            })
+            .reduce((sum, t) => sum + t.amount, 0);
+          return (
+            <KakaoShareButton
+              options={buildTalentShareOptions({
+                studentName: student.name,
+                grade: student.grade,
+                talentBalance: student.talentBalance,
+                monthEarned,
+                appUrl: typeof window !== 'undefined' ? window.location.origin : '',
+              })}
+            />
+          );
+        })()}
       </motion.div>
 
       {/* 자녀 선택 */}

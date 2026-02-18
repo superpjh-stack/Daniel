@@ -21,6 +21,7 @@ import {
   LogOut,
   ImageIcon,
   Camera,
+  BookOpen,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
@@ -40,6 +41,7 @@ interface SidebarProps {
 }
 
 const navItems: NavItem[] = [
+  { href: '/intro', icon: <BookOpen size={20} />, label: '초등부 소개' },
   { href: '/attendance', icon: <Calendar size={20} />, label: '출석 관리', hideForParent: true },
   { href: '/talent', icon: <Star size={20} />, label: '달란트 관리', hideForParent: true },
   { href: '/students', icon: <Users size={20} />, label: '학생 관리', hideForParent: true },

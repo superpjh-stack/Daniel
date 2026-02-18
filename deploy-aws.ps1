@@ -48,19 +48,20 @@ Write-Host "`nApp Runner 배포 중..." -ForegroundColor Yellow
 $serviceExists = aws apprunner list-services --region $Region --query "ServiceSummaryList[?ServiceName=='$AppName'].ServiceArn" --output text 2>$null
 
 if ($serviceExists) {
-    Write-Host "기존 서비스 업데이트 중..." -ForegroundColor Yellow
-    aws apprunner update-service `
+    # 서비스가 RUNNING 상태일 때까지 대기
+    Write-Host "서비스 상태 확인 중..." -ForegroundColor Yellow
+    $maxWait = 120
+    $elapsed = 0
+    while ($elapsed -lt $maxWait) {
+        $status = aws apprunner describe-service --service-arn $serviceExists --region $Region --query "Service.Status" --output text 2>$null
+        if ($status -eq "RUNNING") { break }
+        Write-Host "  현재 상태: $status (대기 중...)" -ForegroundColor Gray
+        Start-Sleep -Seconds 10
+        $elapsed += 10
+    }
+    Write-Host "기존 서비스 배포 트리거 중..." -ForegroundColor Yellow
+    aws apprunner start-deployment `
         --service-arn $serviceExists `
-        --source-configuration "{
-            `"ImageRepository`": {
-                `"ImageIdentifier`": `"$imageUri`",
-                `"ImageRepositoryType`": `"ECR`",
-                `"ImageConfiguration`": {
-                    `"Port`": `"8080`"
-                }
-            },
-            `"AutoDeploymentsEnabled`": false
-        }" `
         --region $Region
 } else {
     Write-Host "새 서비스 생성이 필요합니다." -ForegroundColor Yellow

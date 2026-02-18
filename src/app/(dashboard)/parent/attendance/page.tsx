@@ -5,6 +5,8 @@ import { useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Calendar, CheckCircle, Clock, XCircle } from 'lucide-react';
 import { Card } from '@/components/ui';
+import KakaoShareButton from '@/components/KakaoShareButton';
+import { buildAttendanceShareOptions } from '@/lib/kakao';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 
@@ -37,6 +39,7 @@ export default function ParentAttendancePage() {
   const searchParams = useSearchParams();
   const [children, setChildren] = useState<StudentSummary[]>([]);
   const [selectedChild, setSelectedChild] = useState<string>(searchParams.get('studentId') || '');
+  const [selectedChildInfo, setSelectedChildInfo] = useState<StudentSummary | null>(null);
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
   const [stats, setStats] = useState<AttendanceStats | null>(null);
   const [streak, setStreak] = useState(0);
@@ -58,6 +61,9 @@ export default function ParentAttendancePage() {
         if (!selectedChild && data.student) {
           setSelectedChild(data.student.id);
         }
+        if (data.student) {
+          setSelectedChildInfo(data.student);
+        }
       }
     } catch (error) {
       console.error('Attendance fetch error:', error);
@@ -72,6 +78,7 @@ export default function ParentAttendancePage() {
 
   const handleChildChange = (childId: string) => {
     setSelectedChild(childId);
+    setSelectedChildInfo(children.find(c => c.id === childId) || null);
     fetchAttendance(childId);
   };
 
@@ -86,11 +93,27 @@ export default function ParentAttendancePage() {
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
       {/* 헤더 */}
-      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
-        <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-          <Calendar className="text-blue-500" /> 출석 내역
-        </h1>
-        <p className="text-gray-500 mt-1">자녀의 출석 기록을 확인하세요</p>
+      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+            <Calendar className="text-blue-500" /> 출석 내역
+          </h1>
+          <p className="text-gray-500 mt-1">자녀의 출석 기록을 확인하세요</p>
+        </div>
+        {stats && selectedChildInfo && (
+          <KakaoShareButton
+            options={buildAttendanceShareOptions({
+              studentName: selectedChildInfo.name,
+              grade: selectedChildInfo.grade,
+              className: selectedChildInfo.className,
+              presentCount: stats.totalPresent,
+              lateCount: stats.totalLate,
+              absentCount: stats.totalAbsent,
+              streak,
+              appUrl: typeof window !== 'undefined' ? window.location.origin : '',
+            })}
+          />
+        )}
       </motion.div>
 
       {/* 자녀 선택 */}
