@@ -110,7 +110,7 @@ export default async function GalleryDetailPage({
           </div>
           <GalleryShareButtons
             title={post.title}
-            imageUrl={post.photos[0]?.thumbnailUrl || ''}
+            imageUrl={post.photos[0]?.thumbnailUrl || post.photos[0]?.imageUrl || ''}
           />
         </div>
       </div>
