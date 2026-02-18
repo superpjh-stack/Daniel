@@ -664,6 +664,51 @@ export async function getTopStudentsByTalent(limit: number = 5): Promise<{ id: s
   return students;
 }
 
+// ─── 월간 출석 요약 (달력용) ───
+
+export async function getMonthlyAttendanceSummary(
+  year: number,
+  month: number,
+  classId?: string
+): Promise<Record<string, { total: number; present: number; late: number; absent: number }>> {
+  const startDate = new Date(year, month - 1, 1);
+  const endDate = new Date(year, month, 1);
+
+  const where: Record<string, unknown> = {
+    date: { gte: startDate, lt: endDate },
+  };
+  if (classId && classId !== 'all') {
+    where.student = { classId };
+  }
+
+  const records = await prisma.attendance.findMany({
+    where,
+    select: { date: true, status: true },
+  });
+
+  // 날짜별 집계
+  const summary: Record<string, { total: number; present: number; late: number; absent: number }> = {};
+
+  // 해당 월의 전체 학생 수 구하기
+  const studentWhere: Record<string, unknown> = {};
+  if (classId && classId !== 'all') {
+    studentWhere.classId = classId;
+  }
+  const totalStudents = await prisma.student.count({ where: studentWhere });
+
+  for (const record of records) {
+    const dateKey = record.date.toISOString().split('T')[0];
+    if (!summary[dateKey]) {
+      summary[dateKey] = { total: totalStudents, present: 0, late: 0, absent: 0 };
+    }
+    if (record.status === 'present') summary[dateKey].present++;
+    else if (record.status === 'late') summary[dateKey].late++;
+    else if (record.status === 'absent') summary[dateKey].absent++;
+  }
+
+  return summary;
+}
+
 // ─── Export 함수 (기간별 조회) ───
 
 export async function getAttendanceByPeriod(
@@ -1255,26 +1300,38 @@ export async function getStudentCount(): Promise<number> {
 
 // ─── Stats 페이지용 함수 ───
 
-export async function getWeeklyAttendanceStats(): Promise<{ week: string; present: number; late: number; absent: number }[]> {
-  const fourWeeksAgo = new Date();
-  fourWeeksAgo.setDate(fourWeeksAgo.getDate() - 28);
+export async function getWeeklyAttendanceStats(
+  startDate?: Date,
+  groupBy: 'week' | 'month' = 'week'
+): Promise<{ week: string; present: number; late: number; absent: number }[]> {
+  const queryStartDate = startDate ?? (() => {
+    const d = new Date();
+    d.setDate(d.getDate() - 28);
+    return d;
+  })();
 
   const records = await prisma.attendance.findMany({
-    where: { date: { gte: fourWeeksAgo } },
+    where: { date: { gte: queryStartDate } },
     select: { date: true, status: true },
     orderBy: { date: 'asc' },
   });
 
-  // 주별로 그룹핑
   const weekMap = new Map<string, { present: number; late: number; absent: number }>();
   for (const r of records) {
     const d = r.date;
-    // 해당 주의 월요일을 기준으로 그룹핑
-    const weekStart = new Date(d);
-    const day = weekStart.getDay();
-    const diff = weekStart.getDate() - day + (day === 0 ? -6 : 1);
-    weekStart.setDate(diff);
-    const weekKey = `${String(weekStart.getMonth() + 1).padStart(2, '0')}/${String(weekStart.getDate()).padStart(2, '0')}`;
+    let weekKey: string;
+
+    if (groupBy === 'month') {
+      // 월별 그룹핑 (연간 조회용)
+      weekKey = `${String(d.getMonth() + 1).padStart(2, '0')}월`;
+    } else {
+      // 주별 그룹핑 — 해당 주의 월요일을 기준으로
+      const weekStart = new Date(d);
+      const day = weekStart.getDay();
+      const diff = weekStart.getDate() - day + (day === 0 ? -6 : 1);
+      weekStart.setDate(diff);
+      weekKey = `${String(weekStart.getMonth() + 1).padStart(2, '0')}/${String(weekStart.getDate()).padStart(2, '0')}`;
+    }
 
     if (!weekMap.has(weekKey)) {
       weekMap.set(weekKey, { present: 0, late: 0, absent: 0 });
@@ -1290,22 +1347,30 @@ export async function getWeeklyAttendanceStats(): Promise<{ week: string; presen
     ...stats,
   }));
 
-  return result.length > 0 ? result.slice(-4) : [
-    { week: '1주', present: 0, late: 0, absent: 0 },
-    { week: '2주', present: 0, late: 0, absent: 0 },
-    { week: '3주', present: 0, late: 0, absent: 0 },
-    { week: '4주', present: 0, late: 0, absent: 0 },
-  ];
+  if (result.length > 0) return result;
+
+  // 데이터 없을 때 빈 기본값
+  return groupBy === 'month'
+    ? Array.from({ length: 12 }, (_, i) => ({ week: `${String(i + 1).padStart(2, '0')}월`, present: 0, late: 0, absent: 0 }))
+    : [
+        { week: '1주', present: 0, late: 0, absent: 0 },
+        { week: '2주', present: 0, late: 0, absent: 0 },
+        { week: '3주', present: 0, late: 0, absent: 0 },
+        { week: '4주', present: 0, late: 0, absent: 0 },
+      ];
 }
 
-export async function getAttendanceRanking(limit: number = 10): Promise<{ id: string; name: string; grade: number; attendanceRate: number; totalPresent: number }[]> {
-  const thirtyDaysAgo = new Date();
-  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+export async function getAttendanceRanking(limit: number = 10, startDate?: Date): Promise<{ id: string; name: string; grade: number; attendanceRate: number; totalPresent: number }[]> {
+  const queryStartDate = startDate ?? (() => {
+    const d = new Date();
+    d.setDate(d.getDate() - 30);
+    return d;
+  })();
 
   const students = await prisma.student.findMany({
     include: {
       attendances: {
-        where: { date: { gte: thirtyDaysAgo } },
+        where: { date: { gte: queryStartDate } },
         select: { status: true },
       },
     },

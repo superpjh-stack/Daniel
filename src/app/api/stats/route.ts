@@ -9,14 +9,30 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const period = request.nextUrl.searchParams.get('period') || 'month';
+
+    const now = new Date();
+    const startDate = new Date(now);
+    let groupBy: 'week' | 'month' = 'week';
+
+    if (period === 'quarter') {
+      startDate.setDate(now.getDate() - 90);
+    } else if (period === 'year') {
+      startDate.setFullYear(now.getFullYear() - 1);
+      groupBy = 'month';
+    } else {
+      // month (default)
+      startDate.setDate(now.getDate() - 30);
+    }
+
     const [
       weeklyAttendance,
       attendanceRankingData,
       talentRanking,
       students,
     ] = await Promise.all([
-      getWeeklyAttendanceStats(),
-      getAttendanceRanking(10),
+      getWeeklyAttendanceStats(startDate, groupBy),
+      getAttendanceRanking(10, startDate),
       getTopStudentsByTalent(10),
       getAllStudents(),
     ]);
