@@ -9,6 +9,7 @@
     "lint": "eslint",
     "postinstall": "prisma generate",
     "db:seed": "npx prisma db seed",
+    "db:seed-ccm": "npx tsx prisma/seed-ccm.ts",
     "db:reset": "npx prisma migrate reset --force",
     "db:studio": "npx prisma studio"
   },

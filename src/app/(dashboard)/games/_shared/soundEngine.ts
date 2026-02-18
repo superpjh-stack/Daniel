@@ -372,6 +372,62 @@ class GameSoundEngine {
     const freq = 400 + count * 50;
     this.tone(freq, 0.04, 'triangle', 0.08);
   }
+
+  // === Lost Sheep ===
+
+  playSheepFound() {
+    const ctx = this.getCtx();
+    if (!ctx || this.muted) return;
+    const t = ctx.currentTime;
+    // Warm bell + ascending melody
+    this.tone(523, 0.15, 'sine', 0.12, t);
+    this.tone(659, 0.15, 'sine', 0.12, t + 0.12);
+    this.tone(784, 0.2, 'sine', 0.15, t + 0.24);
+    this.tone(1047, 0.3, 'sine', 0.18, t + 0.4);
+  }
+
+  playReturnMelody() {
+    const ctx = this.getCtx();
+    if (!ctx || this.muted) return;
+    const t = ctx.currentTime;
+    // Warm peaceful melody
+    this.tone(440, 0.2, 'sine', 0.08, t);
+    this.tone(523, 0.2, 'sine', 0.08, t + 0.2);
+    this.tone(659, 0.2, 'sine', 0.08, t + 0.4);
+    this.tone(523, 0.3, 'sine', 0.1, t + 0.6);
+  }
+
+  playWolfAlert() {
+    const ctx = this.getCtx();
+    if (!ctx || this.muted) return;
+    const t = ctx.currentTime;
+    // Tense warning
+    this.tone(200, 0.1, 'sawtooth', 0.1, t);
+    this.tone(250, 0.1, 'sawtooth', 0.1, t + 0.12);
+    this.tone(200, 0.15, 'sawtooth', 0.08, t + 0.24);
+  }
+
+  playStaffSwing() {
+    const ctx = this.getCtx();
+    if (!ctx || this.muted) return;
+    const t = ctx.currentTime;
+    // Whoosh sound
+    this.sweep(800, 200, 0.15, 'sine', 0.1, t);
+    this.noise(0.06, 0.05, t + 0.05);
+  }
+
+  playPenArrival() {
+    const ctx = this.getCtx();
+    if (!ctx || this.muted) return;
+    const t = ctx.currentTime;
+    // Celebratory fanfare
+    this.tone(523, 0.12, 'triangle', 0.12, t);
+    this.tone(659, 0.12, 'triangle', 0.12, t + 0.1);
+    this.tone(784, 0.12, 'triangle', 0.12, t + 0.2);
+    this.tone(1047, 0.15, 'triangle', 0.15, t + 0.3);
+    this.tone(1319, 0.2, 'triangle', 0.15, t + 0.42);
+    this.noise(0.1, 0.03, t + 0.4);
+  }
 }
 
 export const soundEngine = typeof window !== 'undefined' ? new GameSoundEngine() : (new Proxy({} as GameSoundEngine, {

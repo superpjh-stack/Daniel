@@ -17,6 +17,8 @@ export interface Crowd {
   direction: 1 | -1;
   speed: number;
   wantFood: FoodType;
+  isCombo: boolean;
+  comboRemaining: number; // 2 = both needed, 1 = one delivered, 0 = done
   patience: number;
   maxPatience: number;
   width: number;

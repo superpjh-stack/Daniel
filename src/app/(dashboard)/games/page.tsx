@@ -37,6 +37,14 @@ const games = [
     href: '/games/five-loaves',
     available: true,
   },
+  {
+    id: 'lost-sheep',
+    title: '잃은 양 찾기',
+    description: '목자가 되어 미로 속 잃은 양을 구출하세요!',
+    emoji: '\uD83D\uDC11',
+    href: '/games/lost-sheep',
+    available: true,
+  },
 ];
 
 export default function GamesPage() {

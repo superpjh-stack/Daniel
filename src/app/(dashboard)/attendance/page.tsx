@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Calendar,
@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import { Header } from '@/components/layout';
 import { Card, Button, Badge, Avatar } from '@/components/ui';
-import { format, addDays, subDays, startOfWeek, isToday, isSameDay, isFuture } from 'date-fns';
+import { format, addMonths, subMonths, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, isToday, isSameDay, isSameMonth, isFuture } from 'date-fns';
 import { ko } from 'date-fns/locale';
 
 interface Student {
@@ -60,6 +60,13 @@ interface StreakBonus {
   bonus: number;
 }
 
+interface MonthlyDaySummary {
+  total: number;
+  present: number;
+  late: number;
+  absent: number;
+}
+
 export default function AttendancePage() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [students, setStudents] = useState<Student[]>([]);
@@ -93,6 +100,8 @@ export default function AttendancePage() {
   const [streakBonuses, setStreakBonuses] = useState<StreakBonus[]>([]);
 
   const [searchQuery, setSearchQuery] = useState('');
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [monthlySummary, setMonthlySummary] = useState<Record<string, MonthlyDaySummary>>({});
   const hasChanges = Object.keys(attendanceChanges).length > 0;
 
   // FR-08: 미저장 변경 경고
@@ -110,6 +119,25 @@ export default function AttendancePage() {
   useEffect(() => {
     fetchData();
   }, [selectedDate, selectedClass]);
+
+  // 월간 요약 데이터 fetch
+  useEffect(() => {
+    fetchMonthlySummary();
+  }, [currentMonth, selectedClass]);
+
+  const fetchMonthlySummary = async () => {
+    try {
+      const year = currentMonth.getFullYear();
+      const month = currentMonth.getMonth() + 1;
+      const res = await fetch(`/api/attendance/monthly?year=${year}&month=${month}&classId=${selectedClass}`);
+      if (res.ok) {
+        const data = await res.json();
+        setMonthlySummary(data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch monthly summary:', error);
+    }
+  };
 
   const fetchData = async () => {
     setLoading(true);
@@ -209,6 +237,7 @@ export default function AttendancePage() {
         }
         setAttendanceChanges({});
         fetchData();
+        fetchMonthlySummary();
       } else {
         const data = await res.json();
         alert(data.error || '저장에 실패했습니다.');
@@ -250,9 +279,17 @@ export default function AttendancePage() {
     }
   };
 
-  // 주간 날짜 생성
-  const weekStart = startOfWeek(selectedDate, { weekStartsOn: 0 });
-  const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+  // 월간 달력 날짜 생성
+  const monthStart = startOfMonth(currentMonth);
+  const monthEnd = endOfMonth(currentMonth);
+  const calendarStart = startOfWeek(monthStart, { weekStartsOn: 0 });
+  const calendarEnd = endOfWeek(monthEnd, { weekStartsOn: 0 });
+  const calendarDays: Date[] = [];
+  let day = calendarStart;
+  while (day <= calendarEnd) {
+    calendarDays.push(day);
+    day = addDays(day, 1);
+  }
 
   const displayStudents = students.filter((s) =>
     s.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -270,54 +307,110 @@ export default function AttendancePage() {
       />
 
       <div className="space-y-6">
-        {/* 날짜 선택 */}
+        {/* 월간 달력 */}
         <Card>
           <div className="flex items-center justify-between mb-4">
             <button
-              onClick={() => setSelectedDate(subDays(selectedDate, 7))}
+              onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
               className="p-2 rounded-lg hover:bg-purple-50 transition-colors"
             >
               <ChevronLeft size={20} className="text-gray-600" />
             </button>
-            <h3 className="font-bold text-gray-800">
-              {format(selectedDate, 'yyyy년 M월', { locale: ko })}
-            </h3>
+            <div className="flex items-center gap-3">
+              <h3 className="font-bold text-gray-800">
+                {format(currentMonth, 'yyyy년 M월', { locale: ko })}
+              </h3>
+              {!isSameMonth(currentMonth, new Date()) && (
+                <button
+                  onClick={() => {
+                    setCurrentMonth(new Date());
+                    setSelectedDate(new Date());
+                  }}
+                  className="px-2 py-1 text-xs bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors font-medium"
+                >
+                  오늘
+                </button>
+              )}
+            </div>
             <button
-              onClick={() => setSelectedDate(addDays(selectedDate, 7))}
+              onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
               className="p-2 rounded-lg hover:bg-purple-50 transition-colors"
             >
               <ChevronRight size={20} className="text-gray-600" />
             </button>
           </div>
 
-          <div className="grid grid-cols-7 gap-2">
-            {weekDays.map((day) => {
-              const isSelected = isSameDay(day, selectedDate);
-              const isTodayDate = isToday(day);
-              const dayOfWeek = format(day, 'E', { locale: ko });
-              const isSunday = day.getDay() === 0;
-              const isFutureDay = isFuture(day) && !isToday(day);
+          {/* 요일 헤더 */}
+          <div className="grid grid-cols-7 gap-1 mb-1">
+            {['일', '월', '화', '수', '목', '금', '토'].map((dayName, i) => (
+              <div key={dayName} className={`text-center text-xs font-medium py-1 ${i === 0 ? 'text-red-400' : i === 6 ? 'text-blue-400' : 'text-gray-400'}`}>
+                {dayName}
+              </div>
+            ))}
+          </div>
+
+          {/* 날짜 그리드 */}
+          <div className="grid grid-cols-7 gap-1">
+            {calendarDays.map((calDay) => {
+              const isCurrentMonth = isSameMonth(calDay, currentMonth);
+              const isSelected = isSameDay(calDay, selectedDate);
+              const isTodayDate = isToday(calDay);
+              const isSunday = calDay.getDay() === 0;
+              const isSaturday = calDay.getDay() === 6;
+              const isFutureDay = isFuture(calDay) && !isToday(calDay);
+              const dateKey = format(calDay, 'yyyy-MM-dd');
+              const daySummary = monthlySummary[dateKey];
+
+              // 출석 상태 dot 색상 결정
+              let dotColor = '';
+              if (daySummary && isCurrentMonth) {
+                const attended = daySummary.present + daySummary.late;
+                if (attended > 0 && daySummary.absent === 0) {
+                  dotColor = 'bg-emerald-400'; // 전원 출석
+                } else if (attended > 0) {
+                  dotColor = 'bg-amber-400'; // 부분 출석
+                } else if (daySummary.absent > 0) {
+                  dotColor = 'bg-red-400'; // 전원 결석
+                }
+              }
 
               return (
                 <button
-                  key={day.toISOString()}
-                  onClick={() => !isFutureDay && setSelectedDate(day)}
-                  disabled={isFutureDay}
+                  key={calDay.toISOString()}
+                  onClick={() => {
+                    if (!isFutureDay && isCurrentMonth) {
+                      setSelectedDate(calDay);
+                    }
+                  }}
+                  disabled={isFutureDay || !isCurrentMonth}
                   className={`
-                    p-2 sm:p-3 rounded-xl text-center transition-all
-                    ${isFutureDay
-                      ? 'opacity-30 cursor-not-allowed'
-                      : isSelected
-                        ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg'
-                        : isTodayDate
-                          ? 'bg-purple-100 text-purple-700'
-                          : 'hover:bg-purple-50'}
+                    relative p-1.5 sm:p-2 rounded-xl text-center transition-all min-h-[2.5rem] sm:min-h-[3rem]
+                    ${!isCurrentMonth
+                      ? 'opacity-20 cursor-default'
+                      : isFutureDay
+                        ? 'opacity-30 cursor-not-allowed'
+                        : isSelected
+                          ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg'
+                          : isTodayDate
+                            ? 'bg-purple-100 text-purple-700 ring-2 ring-purple-300'
+                            : 'hover:bg-purple-50'}
                   `}
                 >
-                  <p className={`text-xs ${isSunday && !isSelected ? 'text-red-500' : ''}`}>
-                    {dayOfWeek}
+                  <p className={`text-xs sm:text-sm font-semibold
+                    ${!isCurrentMonth ? '' :
+                      isSelected ? 'text-white' :
+                      isSunday ? 'text-red-500' :
+                      isSaturday ? 'text-blue-500' :
+                      'text-gray-700'}
+                  `}>
+                    {format(calDay, 'd')}
                   </p>
-                  <p className="font-bold mt-0.5 sm:mt-1 text-sm sm:text-base">{format(day, 'd')}</p>
+                  {dotColor && !isSelected && (
+                    <div className={`w-1.5 h-1.5 rounded-full ${dotColor} mx-auto mt-0.5`} />
+                  )}
+                  {dotColor && isSelected && (
+                    <div className="w-1.5 h-1.5 rounded-full bg-white/80 mx-auto mt-0.5" />
+                  )}
                 </button>
               );
             })}

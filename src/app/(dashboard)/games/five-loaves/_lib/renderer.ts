@@ -77,20 +77,21 @@ function drawSingleCrowd(ctx: CanvasRenderingContext2D, crowd: Crowd) {
     // Speech bubble with wanted food
     const bubbleX = crowd.x;
     const bubbleY = crowd.y - 30;
-    const bubbleW = 28;
+    const isComboDisplay = crowd.isCombo && crowd.comboRemaining === 2;
+    const bubbleW = isComboDisplay ? 44 : 28;
     const bubbleH = 24;
 
     // Bubble background
-    ctx.fillStyle = 'rgba(255,255,255,0.9)';
+    ctx.fillStyle = isComboDisplay ? 'rgba(255,243,200,0.95)' : 'rgba(255,255,255,0.9)';
     ctx.beginPath();
     ctx.roundRect(bubbleX - bubbleW / 2, bubbleY - bubbleH / 2, bubbleW, bubbleH, 6);
     ctx.fill();
-    ctx.strokeStyle = 'rgba(0,0,0,0.15)';
-    ctx.lineWidth = 1;
+    ctx.strokeStyle = isComboDisplay ? 'rgba(245,158,11,0.4)' : 'rgba(0,0,0,0.15)';
+    ctx.lineWidth = isComboDisplay ? 2 : 1;
     ctx.stroke();
 
     // Bubble pointer
-    ctx.fillStyle = 'rgba(255,255,255,0.9)';
+    ctx.fillStyle = isComboDisplay ? 'rgba(255,243,200,0.95)' : 'rgba(255,255,255,0.9)';
     ctx.beginPath();
     ctx.moveTo(bubbleX - 4, bubbleY + bubbleH / 2);
     ctx.lineTo(bubbleX, bubbleY + bubbleH / 2 + 6);
@@ -98,9 +99,15 @@ function drawSingleCrowd(ctx: CanvasRenderingContext2D, crowd: Crowd) {
     ctx.fill();
 
     // Food emoji
-    const foodEmoji = crowd.wantFood === 'bread' ? '\u{1F35E}' : '\u{1F41F}';
     ctx.font = '14px sans-serif';
-    ctx.fillText(foodEmoji, bubbleX, bubbleY);
+    if (isComboDisplay) {
+      // Show both foods for combo
+      ctx.fillText('\u{1F35E}', bubbleX - 9, bubbleY);
+      ctx.fillText('\u{1F41F}', bubbleX + 9, bubbleY);
+    } else {
+      const foodEmoji = crowd.wantFood === 'bread' ? '\u{1F35E}' : '\u{1F41F}';
+      ctx.fillText(foodEmoji, bubbleX, bubbleY);
+    }
 
     // Patience bar
     const pRatio = Math.max(0, crowd.patience / crowd.maxPatience);

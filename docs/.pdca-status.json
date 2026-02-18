@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-02-18T05:10:47.830Z",
+  "lastUpdated": "2026-02-18T06:46:17.909Z",
   "activeFeatures": [
     "bible-quiz-game",
     "attendance-improvement",
@@ -52,7 +52,10 @@
     "telegram-remote-control",
     "unlink",
     "attendance",
-    "talent"
+    "talent",
+    "monthly",
+    "stats",
+    "parent"
   ],
   "primaryFeature": "davids-sling",
   "features": {
@@ -176,9 +179,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-02-13T18:23:07.481Z",
-        "lastUpdated": "2026-02-18T05:07:46.888Z"
+        "lastUpdated": "2026-02-18T06:11:56.774Z"
       },
-      "lastFile": "C:\\AI Make\\03 Churchapp\\daniel\\src\\lib\\db.ts"
+      "lastFile": "C:\\AI Make\\03 Churchapp\\daniel\\tmp-gen-link.ts"
     },
     "(dashboard)": {
       "phase": "do",
@@ -202,7 +205,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-02-14T03:49:33.454Z",
-        "lastUpdated": "2026-02-16T01:47:53.147Z"
+        "lastUpdated": "2026-02-18T06:41:29.476Z"
       },
       "lastFile": "C:\\AI Make\\03 Churchapp\\daniel\\src\\components\\layout\\Sidebar.tsx"
     },
@@ -215,9 +218,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-02-14T04:04:18.096Z",
-        "lastUpdated": "2026-02-15T15:41:49.066Z"
+        "lastUpdated": "2026-02-18T06:44:22.530Z"
       },
-      "lastFile": "C:\\AI Make\\03 Churchapp\\daniel\\prisma\\cleanup-quiz-duplicates.ts"
+      "lastFile": "C:\\AI Make\\03 Churchapp\\daniel\\prisma\\seed-ccm.ts"
     },
     "attendance": {
       "phase": "do",
@@ -228,9 +231,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-02-14T04:05:35.493Z",
-        "lastUpdated": "2026-02-18T05:08:32.315Z"
+        "lastUpdated": "2026-02-18T05:50:58.388Z"
       },
-      "lastFile": "C:\\AI Make\\03 Churchapp\\daniel\\src\\app\\api\\export\\attendance\\route.ts"
+      "lastFile": "C:\\AI Make\\03 Churchapp\\daniel\\src\\app\\(dashboard)\\attendance\\page.tsx"
     },
     "[id]": {
       "phase": "do",
@@ -254,7 +257,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-02-14T04:30:17.277Z",
-        "lastUpdated": "2026-02-14T04:30:17.277Z"
+        "lastUpdated": "2026-02-18T05:51:35.069Z"
       },
       "lastFile": "C:\\AI Make\\03 Churchapp\\daniel\\src\\app\\api\\stats\\route.ts"
     },
@@ -553,9 +556,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-02-15T15:56:46.251Z",
-        "lastUpdated": "2026-02-18T02:51:16.868Z"
+        "lastUpdated": "2026-02-18T06:46:04.101Z"
       },
-      "lastFile": "C:\\AI Make\\03 Churchapp\\daniel\\src\\app\\(dashboard)\\games\\lost-sheep\\_lib\\renderer.ts"
+      "lastFile": "C:\\AI Make\\03 Churchapp\\daniel\\src\\app\\(dashboard)\\games\\five-loaves\\_lib\\gameEngine.ts"
     },
     "_components": {
       "phase": "do",
@@ -566,9 +569,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-02-15T15:58:27.823Z",
-        "lastUpdated": "2026-02-18T02:50:59.883Z"
+        "lastUpdated": "2026-02-18T06:46:17.909Z"
       },
-      "lastFile": "C:\\AI Make\\03 Churchapp\\daniel\\src\\app\\(dashboard)\\games\\lost-sheep\\_components\\LostSheepGame.tsx"
+      "lastFile": "C:\\AI Make\\03 Churchapp\\daniel\\src\\app\\(dashboard)\\games\\five-loaves\\_components\\FiveLoavesGame.tsx"
     },
     "brick-breaker": {
       "phase": "do",
@@ -876,6 +879,32 @@
         "lastUpdated": "2026-02-18T02:48:46.870Z"
       },
       "lastFile": "C:\\AI Make\\03 Churchapp\\daniel\\src\\app\\api\\telegram\\unlink\\route.ts"
+    },
+    "monthly": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-02-18T05:48:54.486Z",
+        "lastUpdated": "2026-02-18T05:57:22.950Z"
+      },
+      "lastFile": "C:\\AI Make\\03 Churchapp\\daniel\\src\\app\\api\\attendance\\monthly\\route.ts"
+    },
+    "parent": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-02-18T06:41:44.502Z",
+        "lastUpdated": "2026-02-18T06:41:57.386Z"
+      },
+      "lastFile": "C:\\AI Make\\03 Churchapp\\daniel\\src\\app\\(dashboard)\\parent\\page.tsx"
     }
   },
   "pipeline": {
@@ -886,7 +915,7 @@
   "session": {
     "startedAt": "2026-02-13T11:14:24.300Z",
     "onboardingCompleted": false,
-    "lastActivity": "2026-02-18T05:10:47.830Z"
+    "lastActivity": "2026-02-18T06:46:17.909Z"
   },
   "history": [
     {
@@ -3020,6 +3049,222 @@
     {
       "timestamp": "2026-02-18T05:10:47.830Z",
       "feature": "settings",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T05:26:26.904Z",
+      "feature": "daniel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T05:27:00.186Z",
+      "feature": "daniel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T05:31:03.525Z",
+      "feature": "daniel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T05:32:53.477Z",
+      "feature": "daniel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T05:34:32.427Z",
+      "feature": "daniel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T05:48:50.940Z",
+      "feature": "daniel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T05:48:54.486Z",
+      "feature": "monthly",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T05:49:05.518Z",
+      "feature": "attendance",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T05:49:24.429Z",
+      "feature": "attendance",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T05:49:34.914Z",
+      "feature": "attendance",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T05:49:49.759Z",
+      "feature": "attendance",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T05:49:59.400Z",
+      "feature": "attendance",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T05:50:32.296Z",
+      "feature": "attendance",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T05:50:42.403Z",
+      "feature": "attendance",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T05:50:58.388Z",
+      "feature": "attendance",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T05:51:11.566Z",
+      "feature": "daniel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T05:51:20.931Z",
+      "feature": "daniel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T05:51:35.070Z",
+      "feature": "stats",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T05:57:22.950Z",
+      "feature": "monthly",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T06:11:56.774Z",
+      "feature": "daniel",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T06:41:29.476Z",
+      "feature": "layout",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T06:41:44.502Z",
+      "feature": "parent",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T06:41:57.386Z",
+      "feature": "parent",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T06:43:37.532Z",
+      "feature": "prisma",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T06:44:22.530Z",
+      "feature": "prisma",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T06:44:27.865Z",
+      "feature": "_components",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T06:44:34.046Z",
+      "feature": "_components",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T06:44:46.833Z",
+      "feature": "_lib",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T06:44:55.546Z",
+      "feature": "_lib",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T06:45:13.122Z",
+      "feature": "_lib",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T06:45:21.212Z",
+      "feature": "_lib",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T06:45:28.427Z",
+      "feature": "_lib",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T06:45:36.422Z",
+      "feature": "_lib",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T06:45:53.538Z",
+      "feature": "_lib",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T06:46:04.101Z",
+      "feature": "_lib",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-18T06:46:17.909Z",
+      "feature": "_components",
       "phase": "do",
       "action": "updated"
     }

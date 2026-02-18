@@ -151,12 +151,18 @@ export function spawnCrowd(state: GameState, config: StageConfig): Crowd {
   const direction: 1 | -1 = lane % 2 === 0 ? 1 : -1;
   const startX = direction === 1 ? -CROWD_WIDTH : CANVAS_WIDTH + CROWD_WIDTH;
 
+  // Combo request: 30% chance in stages with hasComboRequest
+  const isCombo = config.hasComboRequest && Math.random() < 0.3;
+
   let wantFood: FoodType = 'bread';
-  if (config.hasFish) {
+  if (!isCombo && config.hasFish) {
     wantFood = Math.random() < 0.5 ? 'bread' : 'fish';
   }
+  if (isCombo) {
+    wantFood = 'bread'; // Start with bread, needs both
+  }
 
-  const isChild = config.hasChild && Math.random() < 0.2;
+  const isChild = config.hasChild && !isCombo && Math.random() < 0.2;
   const emojis = isChild ? CHILD_EMOJIS : CROWD_EMOJIS;
   const emoji = emojis[Math.floor(Math.random() * emojis.length)];
 
@@ -172,6 +178,8 @@ export function spawnCrowd(state: GameState, config: StageConfig): Crowd {
     direction,
     speed: config.crowdSpeed,
     wantFood,
+    isCombo,
+    comboRemaining: isCombo ? 2 : 1,
     patience,
     maxPatience: patience,
     width: CROWD_WIDTH,
@@ -207,15 +215,25 @@ export function findClickedCrowd(state: GameState, clickX: number, clickY: numbe
   return null;
 }
 
-export function serveCrowd(state: GameState, crowd: Crowd): void {
-  crowd.served = true;
+export function serveCrowd(state: GameState, crowd: Crowd, food?: FoodType): void {
+  const servedFood = food ?? crowd.wantFood;
+
+  // Combo crowd: need 2 servings
+  if (crowd.isCombo && crowd.comboRemaining > 1) {
+    crowd.comboRemaining--;
+    // Switch to the other food for next serving
+    crowd.wantFood = crowd.wantFood === 'bread' ? 'fish' : 'bread';
+  } else {
+    crowd.comboRemaining = 0;
+    crowd.served = true;
+  }
 
   // Create serving animation
   const basketCenterX = state.basket.x + state.basket.width / 2;
   const basketCenterY = state.basket.y;
   const anim: ServingAnimation = {
     id: state.nextAnimId++,
-    foodType: crowd.wantFood,
+    foodType: servedFood,
     startX: basketCenterX,
     startY: basketCenterY,
     targetX: crowd.x,
@@ -286,13 +304,13 @@ export function activateMiracle(state: GameState): void {
 }
 
 function autoServeOne(state: GameState): void {
-  // Find most urgent unserved crowd
+  // Find most urgent unserved crowd (including combo with remaining)
   const target = state.crowds
     .filter(c => !c.served && !c.leaving)
     .sort((a, b) => a.patience - b.patience)[0];
 
   if (target) {
-    serveCrowd(state, target);
+    serveCrowd(state, target, target.wantFood);
   }
 }
 

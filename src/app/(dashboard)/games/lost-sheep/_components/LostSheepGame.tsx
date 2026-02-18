@@ -1,15 +1,14 @@
 'use client';
 
 import { useRef, useEffect, useState, useCallback } from 'react';
-import type { GameState, GameStatus, FishQuiz, Disciple, DiscipleId, FoodType } from '../_lib/types';
+import type { GameState, GameStatus, SheepQuiz, Direction } from '../_lib/types';
 import { STAGES } from '../_lib/stages';
 import { getRandomQuiz } from '../_lib/quizData';
 import {
-  createInitialState, advanceStage, updateFrame,
-  findClickedCrowd, serveCrowd, buyUpgrade,
-  CANVAS_WIDTH, CANVAS_HEIGHT,
+  createInitialState, updateFrame, tryMoveShepherd, useStaff,
+  completeRescue, CANVAS_WIDTH, CANVAS_HEIGHT, getDPadAreas,
 } from '../_lib/gameEngine';
-import { drawGame, drawReadyScreen, drawPausedOverlay, getButtonHitAreas } from '../_lib/renderer';
+import { drawGame } from '../_lib/renderer';
 import { soundEngine } from '../../_shared/soundEngine';
 import MuteButton from '../../_shared/MuteButton';
 import QuizModal from './QuizModal';
@@ -20,30 +19,29 @@ interface Props {
   studentId?: string;
 }
 
-export default function FiveLoavesGame({ studentId }: Props) {
+export default function LostSheepGame({ studentId }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const stateRef = useRef<GameState>(createInitialState(1));
+  const stateRef = useRef<GameState>(createInitialState(1, STAGES[0]));
   const animFrameRef = useRef<number>(0);
   const lastTimeRef = useRef<number>(0);
   const usedQuizIdsRef = useRef<number[]>([]);
+  const moveIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const currentDirRef = useRef<Direction | null>(null);
 
   const [status, setStatus] = useState<GameStatus>('ready');
-  const [currentQuiz, setCurrentQuiz] = useState<FishQuiz | null>(null);
+  const [currentQuiz, setCurrentQuiz] = useState<SheepQuiz | null>(null);
   const [stageResult, setStageResult] = useState<{
     stage: number; verse: string; verseRef: string; score: number;
-    servedCount: number; disciples: Disciple[]; upgradePoints: number;
+    starsCollected: number; totalStars: number;
   } | null>(null);
   const [gameResult, setGameResult] = useState<{
     score: number; stageCleared: number; quizCorrect: number;
-    quizTotal: number; totalBread: number; totalFish: number; isAllClear: boolean;
+    quizTotal: number; starsCollected: number; isAllClear: boolean;
   } | null>(null);
 
   const getCurrentStageConfig = useCallback(() => {
     return STAGES[stateRef.current.stage - 1];
   }, []);
-
-  // Selected food type for button mode
-  const selectedFoodRef = useRef<FoodType | null>(null);
 
   // Game loop
   useEffect(() => {
@@ -60,53 +58,63 @@ export default function FiveLoavesGame({ studentId }: Props) {
       const state = stateRef.current;
       const config = getCurrentStageConfig();
 
-      if (state.status === 'playing') {
+      if (state.status === 'playing' || state.status === 'returning') {
         updateFrame(state, deltaTime, config);
 
         // Sound events
         for (const ev of state.pendingEvents) {
           switch (ev.type) {
-            case 'serve-success':
-              soundEngine.playServeSuccess(ev.isChild);
+            case 'step':
+              // Light footstep only occasionally
+              if (Math.random() < 0.3) soundEngine.playBlockMove();
               break;
-            case 'serve-miss':
-              soundEngine.playCrowdTimeout();
+            case 'star-collect':
+              soundEngine.playPrayerPickup();
               break;
-            case 'crowd-timeout':
-              soundEngine.playCrowdTimeout();
+            case 'water-checkpoint':
+              soundEngine.playServeSuccess(false);
               break;
-            case 'miracle-activate':
+            case 'wolf-chase':
+              soundEngine.playGoliathAttack();
+              break;
+            case 'wolf-spotted':
+              soundEngine.playDavidDamage();
+              break;
+            case 'wolf-hit':
+              soundEngine.playSlingFire(0.8);
+              break;
+            case 'staff-use':
+              soundEngine.playSlingFire(0.5);
+              break;
+            case 'sheep-found':
               soundEngine.playMiracleActivate();
               break;
-            case 'miracle-deactivate':
-              soundEngine.playMiracleDeactivate();
+            case 'return-start':
+              soundEngine.playStageClear();
               break;
-            case 'basket-multiply':
-              soundEngine.playBasketMultiply();
-              break;
-            case 'upgrade-buy':
-              soundEngine.playUpgradeBuy();
-              break;
-            case 'combo':
-              soundEngine.playCombo(ev.count);
-              break;
+            case 'stage-complete':
+              break; // Handled below
           }
         }
         state.pendingEvents = [];
 
         // Status change detection
-        if (state.status !== 'playing') {
+        if (state.status !== 'playing' && state.status !== 'returning') {
           handleStatusChange(state);
+        }
+      }
+
+      // Rescue animation
+      if (state.status === 'rescue') {
+        state.rescueTimer -= deltaTime;
+        if (state.rescueTimer <= 0) {
+          completeRescue(state);
+          setStatus('returning');
         }
       }
 
       // Render
       drawGame(ctx, state, config);
-      if (state.status === 'ready') {
-        drawReadyScreen(ctx, state.stage);
-      } else if (state.status === 'paused') {
-        drawPausedOverlay(ctx);
-      }
 
       animFrameRef.current = requestAnimationFrame(loop);
     };
@@ -137,23 +145,19 @@ export default function FiveLoavesGame({ studentId }: Props) {
           stageCleared: state.stage,
           quizCorrect: state.quizCorrect,
           quizTotal: state.quizTotal,
-          totalBread: state.totalBread,
-          totalFish: state.totalFish,
+          starsCollected: state.starsCollected,
           isAllClear: true,
         });
         setStatus('all-clear');
       } else {
         soundEngine.playStageClear();
-        // Add upgrade reward
-        state.upgradePoints += config.upgradeReward;
         setStageResult({
           stage: state.stage,
           verse: config.verse,
           verseRef: config.verseRef,
           score: state.score,
-          servedCount: state.servedCount,
-          disciples: state.disciples.map(d => ({ ...d, cost: [...d.cost] })),
-          upgradePoints: state.upgradePoints,
+          starsCollected: state.starsCollected,
+          totalStars: state.totalStars,
         });
         setStatus('stage-clear');
       }
@@ -164,8 +168,7 @@ export default function FiveLoavesGame({ studentId }: Props) {
         stageCleared: Math.max(0, state.stage - 1),
         quizCorrect: state.quizCorrect,
         quizTotal: state.quizTotal,
-        totalBread: state.totalBread,
-        totalFish: state.totalFish,
+        starsCollected: state.starsCollected,
         isAllClear: false,
       });
       setStatus('game-over');
@@ -178,8 +181,7 @@ export default function FiveLoavesGame({ studentId }: Props) {
       state.quizCorrect++;
       state.hp = Math.min(state.maxHp, state.hp + 1);
       state.score += 300;
-      state.miracleGauge.value = Math.min(100, state.miracleGauge.value + 15);
-      state.upgradePoints += 2;
+      state.timeLeft = Math.min(state.maxTime, state.timeLeft + 15000);
       soundEngine.playQuizCorrect();
     } else {
       soundEngine.playQuizIncorrect();
@@ -189,64 +191,88 @@ export default function FiveLoavesGame({ studentId }: Props) {
     const config = getCurrentStageConfig();
     if (state.stage >= 5) {
       soundEngine.playAllClear();
-      state.upgradePoints += config.upgradeReward;
       setGameResult({
         score: state.score,
         stageCleared: state.stage,
         quizCorrect: state.quizCorrect,
         quizTotal: state.quizTotal,
-        totalBread: state.totalBread,
-        totalFish: state.totalFish,
+        starsCollected: state.starsCollected,
         isAllClear: true,
       });
       state.status = 'all-clear';
       setStatus('all-clear');
     } else {
       soundEngine.playStageClear();
-      state.upgradePoints += config.upgradeReward;
       setStageResult({
         stage: state.stage,
         verse: config.verse,
         verseRef: config.verseRef,
         score: state.score,
-        servedCount: state.servedCount,
-        disciples: state.disciples.map(d => ({ ...d, cost: [...d.cost] })),
-        upgradePoints: state.upgradePoints,
+        starsCollected: state.starsCollected,
+        totalStars: state.totalStars,
       });
       state.status = 'stage-clear';
       setStatus('stage-clear');
     }
   }
 
-  function handleUpgrade(discipleId: DiscipleId) {
-    const state = stateRef.current;
-    const success = buyUpgrade(state, discipleId);
-    if (success) {
-      // Update stageResult to reflect new state
-      setStageResult(prev => prev ? {
-        ...prev,
-        disciples: state.disciples.map(d => ({ ...d, cost: [...d.cost] })),
-        upgradePoints: state.upgradePoints,
-      } : null);
-    }
-  }
-
   function handleNextStage() {
     const state = stateRef.current;
-    const nextConfig = STAGES[state.stage]; // stage is 1-indexed
-    advanceStage(state, nextConfig);
+    const nextStageNum = state.stage + 1;
+    const nextConfig = STAGES[nextStageNum - 1];
+    if (!nextConfig) return;
+
+    // Preserve quiz state
+    const qc = state.quizCorrect;
+    const qt = state.quizTotal;
+    const sc = state.score;
+    const stars = state.starsCollected;
+
+    const newState = createInitialState(nextStageNum, nextConfig);
+    newState.quizCorrect = qc;
+    newState.quizTotal = qt;
+    newState.score = sc;
+    newState.starsCollected = stars;
+    stateRef.current = newState;
+
     setStageResult(null);
-    setStatus('playing');
+    setStatus('ready');
+    lastTimeRef.current = 0;
   }
 
   function handleRestart() {
-    stateRef.current = createInitialState(1);
+    stateRef.current = createInitialState(1, STAGES[0]);
     usedQuizIdsRef.current = [];
     setGameResult(null);
     setStageResult(null);
     setCurrentQuiz(null);
     setStatus('ready');
     lastTimeRef.current = 0;
+  }
+
+  function startMoving(dir: Direction) {
+    const state = stateRef.current;
+    if (state.status !== 'playing' && state.status !== 'returning') return;
+    tryMoveShepherd(state, dir);
+    currentDirRef.current = dir;
+
+    // Continuous movement on hold
+    if (moveIntervalRef.current) clearInterval(moveIntervalRef.current);
+    moveIntervalRef.current = setInterval(() => {
+      const s = stateRef.current;
+      if (s.status !== 'playing' && s.status !== 'returning') return;
+      if (currentDirRef.current) {
+        tryMoveShepherd(s, currentDirRef.current);
+      }
+    }, 180);
+  }
+
+  function stopMoving() {
+    currentDirRef.current = null;
+    if (moveIntervalRef.current) {
+      clearInterval(moveIntervalRef.current);
+      moveIntervalRef.current = null;
+    }
   }
 
   function getCanvasPos(e: React.MouseEvent | React.TouchEvent): { x: number; y: number } {
@@ -286,44 +312,32 @@ export default function FiveLoavesGame({ studentId }: Props) {
       return;
     }
 
-    if (state.status !== 'playing') return;
+    if (state.status !== 'playing' && state.status !== 'returning') return;
 
     const pos = getCanvasPos(e);
+    const areas = getDPadAreas();
 
-    // Check if bread/fish button was pressed
-    const buttons = getButtonHitAreas(state);
-    if (pos.x >= buttons.bread.x && pos.x <= buttons.bread.x + buttons.bread.w &&
-        pos.y >= buttons.bread.y && pos.y <= buttons.bread.y + buttons.bread.h) {
-      // Bread button: serve the most urgent crowd wanting bread
-      serveByFood(state, 'bread');
-      return;
-    }
-    if (pos.x >= buttons.fish.x && pos.x <= buttons.fish.x + buttons.fish.w &&
-        pos.y >= buttons.fish.y && pos.y <= buttons.fish.y + buttons.fish.h) {
-      serveByFood(state, 'fish');
-      return;
-    }
+    // Check d-pad
+    if (hitTest(pos, areas.up)) { startMoving('up'); return; }
+    if (hitTest(pos, areas.down)) { startMoving('down'); return; }
+    if (hitTest(pos, areas.left)) { startMoving('left'); return; }
+    if (hitTest(pos, areas.right)) { startMoving('right'); return; }
 
-    // Click on crowd directly
-    const crowd = findClickedCrowd(state, pos.x, pos.y);
-    if (crowd) {
-      serveCrowd(state, crowd);
+    // Check staff button
+    if (hitTest(pos, areas.staff)) {
+      useStaff(state);
+      return;
     }
   }
 
-  function serveByFood(state: GameState, food: FoodType) {
-    // Find the most urgent unserved crowd wanting this food
-    const target = state.crowds
-      .filter(c => !c.served && !c.leaving && c.wantFood === food)
-      .sort((a, b) => a.patience - b.patience)[0];
+  function handlePointerUp(e: React.MouseEvent | React.TouchEvent) {
+    e.preventDefault();
+    stopMoving();
+  }
 
-    if (target) {
-      serveCrowd(state, target);
-    } else {
-      // No matching crowd - miss
-      state.comboCount = 0;
-      state.pendingEvents.push({ type: 'serve-miss' });
-    }
+  function hitTest(pos: { x: number; y: number }, area: { x: number; y: number; w: number; h: number }): boolean {
+    return pos.x >= area.x && pos.x <= area.x + area.w &&
+           pos.y >= area.y && pos.y <= area.y + area.h;
   }
 
   // Keyboard events
@@ -339,29 +353,59 @@ export default function FiveLoavesGame({ studentId }: Props) {
       }
 
       if (e.key === 'p' || e.key === 'P') {
-        if (state.status === 'playing') {
+        if (state.status === 'playing' || state.status === 'returning') {
           state.status = 'paused';
           setStatus('paused');
         } else if (state.status === 'paused') {
           state.status = 'playing';
           setStatus('playing');
         }
+        return;
       }
 
-      // 1 or b = bread, 2 or f = fish
-      if (state.status === 'playing') {
-        if (e.key === '1' || e.key === 'b' || e.key === 'B') {
-          e.preventDefault();
-          serveByFood(state, 'bread');
-        } else if (e.key === '2' || e.key === 'f' || e.key === 'F') {
-          e.preventDefault();
-          serveByFood(state, 'fish');
-        }
+      if (state.status !== 'playing' && state.status !== 'returning') return;
+
+      // Arrow keys / WASD
+      const dirMap: Record<string, Direction> = {
+        ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right',
+        w: 'up', s: 'down', a: 'left', d: 'right',
+        W: 'up', S: 'down', A: 'left', D: 'right',
+      };
+
+      const dir = dirMap[e.key];
+      if (dir) {
+        e.preventDefault();
+        startMoving(dir);
+        return;
+      }
+
+      // Space = staff
+      if (e.key === ' ') {
+        e.preventDefault();
+        useStaff(state);
+      }
+    }
+
+    function handleKeyUp(e: KeyboardEvent) {
+      const dirKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'w', 'a', 's', 'd', 'W', 'A', 'S', 'D'];
+      if (dirKeys.includes(e.key)) {
+        stopMoving();
       }
     }
 
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
+  }, []);
+
+  // Cleanup interval on unmount
+  useEffect(() => {
+    return () => {
+      if (moveIntervalRef.current) clearInterval(moveIntervalRef.current);
+    };
   }, []);
 
   return (
@@ -373,7 +417,11 @@ export default function FiveLoavesGame({ studentId }: Props) {
         className="w-full border-2 border-slate-200 rounded-xl touch-none"
         style={{ maxWidth: 400 }}
         onMouseDown={handlePointerDown}
+        onMouseUp={handlePointerUp}
+        onMouseLeave={handlePointerUp}
         onTouchStart={handlePointerDown}
+        onTouchEnd={handlePointerUp}
+        onTouchCancel={handlePointerUp}
       />
 
       {/* Mute button */}
@@ -382,9 +430,9 @@ export default function FiveLoavesGame({ studentId }: Props) {
       </div>
 
       {/* Controls hint */}
-      {status === 'playing' && (
+      {(status === 'playing' || status === 'returning') && (
         <p className="text-center text-xs text-slate-400 mt-1">
-          {'\u{1F35E}'} 버튼 또는 군중 터치로 서빙 | 1: 빵 | 2: 물고기 | P: 일시정지
+          방향키/WASD: 이동 | Space: 지팡이 | P: 일시정지
         </p>
       )}
 
@@ -398,10 +446,8 @@ export default function FiveLoavesGame({ studentId }: Props) {
           verse={stageResult.verse}
           verseRef={stageResult.verseRef}
           score={stageResult.score}
-          servedCount={stageResult.servedCount}
-          disciples={stageResult.disciples}
-          upgradePoints={stageResult.upgradePoints}
-          onUpgrade={handleUpgrade}
+          starsCollected={stageResult.starsCollected}
+          totalStars={stageResult.totalStars}
           onNext={handleNextStage}
         />
       )}
