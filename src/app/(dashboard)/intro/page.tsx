@@ -45,9 +45,9 @@ const principles = [
 ];
 
 const staff = [
-  { name: '담당 교역자', role: '교역자', initial: '교', color: 'bg-indigo-100 text-indigo-600' },
-  { name: '부장 교사', role: '부장', initial: '부', color: 'bg-purple-100 text-purple-600' },
-  { name: '총무 교사', role: '총무', initial: '총', color: 'bg-pink-100 text-pink-600' },
+  { name: '김수빈 전도사', role: '담당 교역자', initial: '김', color: 'bg-indigo-100 text-indigo-600' },
+  { name: '이원기 집사', role: '부장 교사', initial: '이', color: 'bg-purple-100 text-purple-600' },
+  { name: '박재홍 집사', role: '총무 교사', initial: '박', color: 'bg-pink-100 text-pink-600' },
 ];
 
 const containerVariants = {
