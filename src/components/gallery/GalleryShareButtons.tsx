@@ -52,7 +52,8 @@ export default function GalleryShareButtons({ title, imageUrl }: GalleryShareBut
         typeof navigator !== 'undefined' && 'canShare' in navigator;
 
       if (canShareFiles) {
-        const response = await fetch(imageUrl);
+        const proxyUrl = `/api/gallery/proxy-image?url=${encodeURIComponent(imageUrl)}`;
+      const response = await fetch(proxyUrl);
         if (!response.ok) throw new Error('fetch-failed');
         const blob = await response.blob();
         const file = new File([blob], 'dongeun-gallery.jpg', {
