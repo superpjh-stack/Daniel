@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Calendar, Star, TrendingUp, Megaphone, ChevronRight } from 'lucide-react';
+import { Calendar, Star, TrendingUp, Megaphone, ChevronRight, Gamepad2, Music, Camera, Trophy, ShoppingBag } from 'lucide-react';
 import Link from 'next/link';
 import { Card, Badge } from '@/components/ui';
 import { format } from 'date-fns';
@@ -228,6 +228,38 @@ export default function ParentDashboardPage() {
             })
           )}
         </Card>
+      </motion.div>
+
+      {/* 빠른 이동 */}
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55 }}>
+        <h2 className="text-lg font-bold text-gray-800 mb-3">바로가기</h2>
+        <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
+          {[
+            { href: '/parent/talent', icon: <Star size={22} className="text-amber-500" />, label: '달란트 관리', bg: 'from-amber-50 to-yellow-50', border: 'border-amber-100' },
+            { href: '/announcements', icon: <Megaphone size={22} className="text-purple-500" />, label: '공지사항', bg: 'from-purple-50 to-violet-50', border: 'border-purple-100' },
+            { href: '/quiz', icon: <Gamepad2 size={22} className="text-blue-500" />, label: '성경퀴즈', bg: 'from-blue-50 to-sky-50', border: 'border-blue-100' },
+            { href: '/ccm', icon: <Music size={22} className="text-pink-500" />, label: '추천 CCM', bg: 'from-pink-50 to-rose-50', border: 'border-pink-100' },
+            { href: '/gallery', icon: <Camera size={22} className="text-green-500" />, label: '사진첩', bg: 'from-green-50 to-emerald-50', border: 'border-green-100' },
+            { href: '/games', icon: <Trophy size={22} className="text-orange-500" />, label: '게임', bg: 'from-orange-50 to-amber-50', border: 'border-orange-100' },
+            { href: '/shop', icon: <ShoppingBag size={22} className="text-indigo-500" />, label: '달란트잔치', bg: 'from-indigo-50 to-blue-50', border: 'border-indigo-100' },
+          ].map((item, i) => (
+            <motion.div
+              key={item.href}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.55 + i * 0.05 }}
+              whileHover={{ scale: 1.05 }}
+            >
+              <Link
+                href={item.href}
+                className={`flex flex-col items-center justify-center gap-2 p-4 rounded-2xl bg-gradient-to-br ${item.bg} border ${item.border} text-center hover:shadow-md transition-shadow`}
+              >
+                {item.icon}
+                <span className="text-xs font-medium text-gray-700 leading-tight">{item.label}</span>
+              </Link>
+            </motion.div>
+          ))}
+        </div>
       </motion.div>
 
       {/* 공지사항 */}

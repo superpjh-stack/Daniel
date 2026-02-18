@@ -198,11 +198,52 @@ model ParentStudent {
 
 ---
 
-## 8. Next Steps
+## 8. v2 — 7개 영역 확장 (2026-02-18)
 
-1. [ ] Design 문서 작성 (`/pdca design parent-portal`)
-2. [ ] 구현 시작 (`/pdca do parent-portal`)
-3. [ ] Gap 분석 (`/pdca analyze parent-portal`)
+### 배경
+학부모 포털 기본 구현 완료 후, 학부모에게 제공할 영역을 7개로 확대한다.
+
+### 현재 학부모 접근 현황
+
+| 영역 | 현재 상태 | 목표 |
+|------|-----------|------|
+| 달란트관리 | ✅ `/parent/talent` | 유지 |
+| 공지사항 | ✅ `/announcements` | 유지 |
+| 성경퀴즈 | ❌ `hideForParent: true` | 허용 |
+| 추천 CCM | ✅ `/ccm` | 유지 |
+| 사진첩 | ✅ `/gallery` | 유지 |
+| 게임 | ❌ `hideForParent: true` | 허용 |
+| 달란트잔치 | ❌ `adminOnly: true` | 허용 |
+
+### 수정 파일
+
+#### A. `src/components/layout/Sidebar.tsx`
+- 성경퀴즈: `hideForParent: true` → 제거
+- 게임: `hideForParent: true` → 제거
+- 달란트잔치: `adminOnly: true` → `hideForParent: false` (교사/학부모 모두 접근)
+
+#### B. `src/app/(dashboard)/parent/page.tsx`
+- 학부모 대시보드에 7개 영역 퀵 액세스 카드 섹션 추가
+- 기존 출석/달란트/공지 요약 카드는 유지
+
+#### C. 개별 페이지 접근 제어 확인
+- `/quiz` 페이지: 학부모가 퀴즈 플레이 가능 (관리 기능은 제외)
+- `/games` 페이지: 학부모도 게임 플레이 가능
+- `/shop` 페이지: 학부모 조회 허용 (구매는 학생 계정 기반으로 제한 없음)
+
+### 고려사항
+- 달란트잔치(shop) 구매 API는 session.role로 차단하지 않고 studentId로 동작 → 학부모도 조회/구매 가능
+- 성경퀴즈 관리 페이지(`/quiz/manage`)는 admin/teacher 전용 유지
+- 게임 달란트 보상 API는 studentId 기반 → 학부모가 게임해도 별도 처리 불필요
+
+---
+
+## 9. Next Steps
+
+1. [x] 기본 학부모 포털 구현 완료 (v1)
+2. [ ] 7개 영역 접근 제어 수정 (Sidebar + 각 페이지)
+3. [ ] 학부모 대시보드 퀵 액세스 카드 추가
+4. [ ] 테스트 및 배포
 
 ---
 
@@ -211,3 +252,4 @@ model ParentStudent {
 | Version | Date | Changes | Author |
 |---------|------|---------|--------|
 | 0.1 | 2026-02-13 | Initial draft | Claude |
+| 0.2 | 2026-02-18 | 7개 영역 확장 계획 추가 | Claude |
